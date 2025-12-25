@@ -125,7 +125,7 @@ const DoubanCustomSelector: React.FC<DoubanCustomSelectorProps> = ({
   // 更新指示器位置的通用函数
   const updateIndicatorPosition = (
     activeIndex: number,
-    containerRef: React.RefObject<HTMLDivElement>,
+    containerRef: React.RefObject<HTMLDivElement | null>,
     buttonRefs: React.MutableRefObject<(HTMLButtonElement | null)[]>,
     setIndicatorStyle: React.Dispatch<
       React.SetStateAction<{ left: number; width: number }>
@@ -281,7 +281,7 @@ const DoubanCustomSelector: React.FC<DoubanCustomSelectorProps> = ({
       <div className='space-y-3 sm:space-y-4'>
         {/* 一级选择器 */}
         <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-          <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+          <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-12'>
             类型
           </span>
           <div className='overflow-x-auto'>
@@ -297,7 +297,7 @@ const DoubanCustomSelector: React.FC<DoubanCustomSelectorProps> = ({
         {/* 二级选择器 */}
         {secondaryOptions.length > 0 && (
           <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-12'>
               片单
             </span>
             <div ref={secondaryScrollContainerRef} className='overflow-x-auto'>

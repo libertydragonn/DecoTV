@@ -1,6 +1,129 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Tailwind 4 Dark Mode Configuration - 使用 class 选择器而非媒体查询 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind 4 Theme Configuration */
+@theme {
+  /* Font Family */
+  --font-primary:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /* Primary Colors */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-dark: #222222;
+
+  /* 修复 Tailwind 4 亮色模式下灰色过淡的问题，恢复高对比度灰色 */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Custom Animations */
+  --animate-flicker: flicker 3s linear infinite;
+  --animate-shimmer: shimmer 1.3s linear infinite;
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-in-out;
+  --animate-slide-down: slideDown 0.3s ease-in-out;
+  --animate-slide-in-from-right: slideInFromRight 0.3s ease-out;
+}
+
+/* Mobile Landscape Media Query - 自定义断点需要直接使用 */
+@custom-media --mobile-landscape (orientation: landscape) and (max-height: 700px);
+
+/* Custom Keyframes */
+@keyframes flicker {
+  0%,
+  19.999%,
+  22%,
+  62.999%,
+  64%,
+  64.999%,
+  70%,
+  100% {
+    opacity: 0.99;
+    filter: drop-shadow(0 0 1px rgba(252, 211, 77))
+      drop-shadow(0 0 15px rgba(245, 158, 11))
+      drop-shadow(0 0 1px rgba(252, 211, 77));
+  }
+  20%,
+  21.999%,
+  63%,
+  63.999%,
+  65%,
+  69.999% {
+    opacity: 0.4;
+    filter: none;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -700px 0;
+  }
+  100% {
+    background-position: 700px 0;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 
 @layer utilities {
   .scrollbar-hide {
@@ -44,8 +167,10 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 5px rgba(139, 92, 246, 0.5),
-    0 0 10px rgba(167, 139, 250, 0.4), 0 0 15px rgba(192, 132, 252, 0.3),
+  text-shadow:
+    0 0 5px rgba(139, 92, 246, 0.5),
+    0 0 10px rgba(167, 139, 250, 0.4),
+    0 0 15px rgba(192, 132, 252, 0.3),
     0 0 20px rgba(240, 171, 252, 0.2);
   animation: neonGradientShift 4s ease-in-out infinite;
 }
@@ -99,7 +224,8 @@ body {
     rgba(255, 255, 255, 0.15)
   );
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4),
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 10px 30px -15px rgba(99, 102, 241, 0.5);
   backdrop-filter: blur(16px);
 }
@@ -170,13 +296,17 @@ body {
 @keyframes neonPulse {
   0%,
   100% {
-    box-shadow: 0 0 5px rgba(139, 92, 246, 0.5),
-      0 0 10px rgba(139, 92, 246, 0.3), 0 0 15px rgba(139, 92, 246, 0.1);
+    box-shadow:
+      0 0 5px rgba(139, 92, 246, 0.5),
+      0 0 10px rgba(139, 92, 246, 0.3),
+      0 0 15px rgba(139, 92, 246, 0.1);
   }
 
   50% {
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.8),
-      0 0 20px rgba(139, 92, 246, 0.6), 0 0 30px rgba(139, 92, 246, 0.4);
+    box-shadow:
+      0 0 10px rgba(139, 92, 246, 0.8),
+      0 0 20px rgba(139, 92, 246, 0.6),
+      0 0 30px rgba(139, 92, 246, 0.4);
   }
 }
 
@@ -238,12 +368,15 @@ body {
 @keyframes cardGlow {
   0%,
   100% {
-    box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.1),
+    box-shadow:
+      0 20px 40px -15px rgba(139, 92, 246, 0.1),
       0 0 0 1px rgba(255, 255, 255, 0.1);
   }
   50% {
-    box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 20px rgba(139, 92, 246, 0.1);
+    box-shadow:
+      0 20px 40px -15px rgba(139, 92, 246, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 0 20px rgba(139, 92, 246, 0.1);
   }
 }
 
@@ -322,7 +455,15 @@ body {
 .chip-theme {
   position: relative;
   isolation: isolate;
+  /* 亮色模式下使用深色文字 */
+  color: #374151;
 }
+
+/* 暗色模式下使用浅色文字 */
+:is(.dark .chip-theme) {
+  color: #f3f4f6;
+}
+
 .chip-theme::before {
   content: '';
   position: absolute;
@@ -330,7 +471,9 @@ body {
   border-radius: 9999px;
   z-index: -1;
   opacity: 0.85;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
 }
 .chip-theme:hover::before {
   opacity: 1;
@@ -468,7 +611,9 @@ body {
 }
 .mbnav-item {
   position: relative;
-  transition: transform 0.25s ease, color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
 }
 .mbnav-item::after {
   content: '';
@@ -483,7 +628,9 @@ body {
   );
   opacity: 0;
   filter: blur(6px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 .mbnav-item:hover {
   transform: translateY(-2px);
@@ -558,12 +705,89 @@ html:not(.dark) body {
   background-attachment: fixed;
 }
 
+/* 亮色模式文字颜色强制覆盖 - 修复 Tailwind 4 OKLCH 灰色过淡问题 */
+html:not(.dark) {
+  /* 覆盖 Tailwind 4 OKLCH 灰色，使用传统高对比度 HEX 值 */
+  --tw-text-opacity: 1;
+}
+
+/* 强制使用深色文字 - 确保亮色模式下可读性 */
+html:not(.dark) .text-gray-900 {
+  color: #111827 !important;
+}
+
+html:not(.dark) .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+html:not(.dark) .text-gray-700 {
+  color: #374151 !important;
+}
+
+html:not(.dark) .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+html:not(.dark) .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+html:not(.dark) .text-slate-900 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-800 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-700 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-slate-600 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* 亮色模式背景颜色强制覆盖 */
+html:not(.dark) .bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .bg-slate-100 {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .from-slate-50 {
+  --tw-gradient-from: #f8fafc !important;
+}
+
+html:not(.dark) .to-slate-100 {
+  --tw-gradient-to: #f1f5f9 !important;
+}
+
+html:not(.dark) .hover\:bg-slate-100:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .hover\:bg-slate-50:hover {
+  background-color: #f8fafc !important;
+}
+
 /* 动态渐变闪烁背景粒子层（轻量） */
 .bg-animated-gradient::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       800px 800px at 10% 10%,
       rgba(99, 102, 241, 0.08),
       transparent 60%
@@ -598,7 +822,8 @@ html:not(.dark) body {
 .glass-card {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.24);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12),
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
   border-radius: 1rem;
@@ -759,12 +984,18 @@ div[data-media-provider] video {
 @keyframes neon-pulse {
   0%,
   100% {
-    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor,
-      0 0 15px currentColor, 0 0 20px currentColor;
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 15px currentColor,
+      0 0 20px currentColor;
   }
   50% {
-    text-shadow: 0 0 2px currentColor, 0 0 5px currentColor,
-      0 0 8px currentColor, 0 0 12px currentColor;
+    text-shadow:
+      0 0 2px currentColor,
+      0 0 5px currentColor,
+      0 0 8px currentColor,
+      0 0 12px currentColor;
   }
 }
 
@@ -810,7 +1041,8 @@ div[data-media-provider] video {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: neon-gradient 3s ease-in-out infinite,
+  animation:
+    neon-gradient 3s ease-in-out infinite,
     neon-pulse 2s ease-in-out infinite alternate;
 }
 

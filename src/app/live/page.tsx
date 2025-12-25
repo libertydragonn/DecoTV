@@ -1145,10 +1145,10 @@ function LivePageClient() {
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画直播图标 */}
             <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>📺</div>
                 {/* 旋转光环 */}
-                <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
               </div>
 
               {/* 浮动粒子效果 */}
@@ -1194,7 +1194,7 @@ function LivePageClient() {
               {/* 进度条 */}
               <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
                 <div
-                  className='h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
+                  className='h-full bg-linear-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
                   style={{
                     width:
                       loadingStage === 'loading'
@@ -1226,10 +1226,10 @@ function LivePageClient() {
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-red-500 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>😵</div>
                 {/* 脉冲效果 */}
-                <div className='absolute -inset-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl opacity-20 animate-pulse'></div>
+                <div className='absolute -inset-2 bg-linear-to-r from-red-500 to-orange-500 rounded-2xl opacity-20 animate-pulse'></div>
               </div>
             </div>
 
@@ -1252,7 +1252,7 @@ function LivePageClient() {
             <div className='space-y-3'>
               <button
                 onClick={() => window.location.reload()}
-                className='w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
               >
                 🔄 重新尝试
               </button>
@@ -1265,11 +1265,11 @@ function LivePageClient() {
 
   return (
     <PageLayout activePath='/live'>
-      <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
+      <div className='flex flex-col gap-3 py-4 px-5 lg:px-12 2xl:px-20'>
         {/* 第一行：页面标题 */}
         <div className='py-1'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 max-w-[80%]'>
-            <Radio className='w-5 h-5 text-blue-500 flex-shrink-0' />
+            <Radio className='w-5 h-5 text-blue-500 shrink-0' />
             <div className='min-w-0 flex-1'>
               <div className='truncate'>
                 {currentSource?.name}
@@ -1328,7 +1328,7 @@ function LivePageClient() {
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
+            className={`grid gap-4 lg:h-125 xl:h-162.5 2xl:h-187.5 transition-all duration-300 ease-in-out ${
               isChannelListCollapsed
                 ? 'grid-cols-1'
                 : 'grid-cols-1 md:grid-cols-4'
@@ -1340,7 +1340,7 @@ function LivePageClient() {
                 isChannelListCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
-              <div className='relative w-full h-[300px] lg:h-full'>
+              <div className='relative w-full h-75 lg:h-full'>
                 <div
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30'
@@ -1348,12 +1348,12 @@ function LivePageClient() {
 
                 {/* 不支持的直播类型提示 */}
                 {unsupportedType && (
-                  <div className='absolute inset-0 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-[600] transition-all duration-300'>
+                  <div className='absolute inset-0 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-600 transition-all duration-300'>
                     <div className='text-center max-w-md mx-auto px-6'>
                       <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-orange-500 to-red-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                           <div className='text-white text-4xl'>⚠️</div>
-                          <div className='absolute -inset-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl opacity-20 animate-pulse'></div>
+                          <div className='absolute -inset-2 bg-linear-to-r from-orange-500 to-red-600 rounded-2xl opacity-20 animate-pulse'></div>
                         </div>
                       </div>
                       <div className='space-y-4'>
@@ -1379,12 +1379,12 @@ function LivePageClient() {
 
                 {/* 视频加载蒙层 */}
                 {isVideoLoading && (
-                  <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-[500] transition-all duration-300'>
+                  <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-500 transition-all duration-300'>
                     <div className='text-center max-w-md mx-auto px-6'>
                       <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                           <div className='text-white text-4xl'>📺</div>
-                          <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                          <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
                         </div>
                       </div>
                       <div className='space-y-2'>
@@ -1400,7 +1400,7 @@ function LivePageClient() {
 
             {/* 频道列表 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`h-75 lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
                 isChannelListCollapsed
                   ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
@@ -1408,7 +1408,7 @@ function LivePageClient() {
             >
               <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
                 {/* 主要的 Tab 切换 */}
-                <div className='flex mb-1 -mx-6 flex-shrink-0'>
+                <div className='flex mb-1 -mx-6 shrink-0'>
                   <div
                     onClick={() => setActiveTab('channels')}
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
@@ -1439,7 +1439,7 @@ function LivePageClient() {
                 {activeTab === 'channels' && (
                   <>
                     {/* 搜索框 */}
-                    <div className='mb-3 flex-shrink-0 px-1'>
+                    <div className='mb-3 shrink-0 px-1'>
                       <div className='relative'>
                         <input
                           type='text'
@@ -1475,7 +1475,7 @@ function LivePageClient() {
 
                     {/* 分组标签 - 横向滚动 */}
                     {!channelSearchQuery && (
-                      <div className='mb-3 flex-shrink-0 -mx-6'>
+                      <div className='mb-3 shrink-0 -mx-6'>
                         {/* 切换状态提示 */}
                         {isSwitchingSource && (
                           <div className='flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 px-6 pb-2'>
@@ -1493,7 +1493,7 @@ function LivePageClient() {
                           <button
                             onClick={() => setIsGroupSelectorOpen(true)}
                             disabled={isSwitchingSource}
-                            className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2 ${
+                            className={`shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2 ${
                               isSwitchingSource
                                 ? 'opacity-50 cursor-not-allowed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-400'
                                 : 'border-green-500 dark:border-green-400 bg-white dark:bg-gray-800 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
@@ -1544,7 +1544,7 @@ function LivePageClient() {
                                     }}
                                     onClick={() => handleGroupChange(group)}
                                     disabled={isSwitchingSource}
-                                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                                    className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                                       isSwitchingSource
                                         ? 'opacity-50 cursor-not-allowed'
                                         : isActive
@@ -1628,7 +1628,7 @@ function LivePageClient() {
                                 }`}
                               >
                                 <div className='flex items-center gap-3'>
-                                  <div className='w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                                  <div className='w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0 overflow-hidden'>
                                     {channel.logo ? (
                                       <img
                                         src={`/api/proxy/logo?url=${encodeURIComponent(
@@ -1652,7 +1652,7 @@ function LivePageClient() {
                                       </div>
                                       {/* 搜索结果时显示分类标签 */}
                                       {isSearchResult && (
-                                        <span className='flex-shrink-0 px-2 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'>
+                                        <span className='shrink-0 px-2 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'>
                                           {channel.group}
                                         </span>
                                       )}
@@ -1698,7 +1698,7 @@ function LivePageClient() {
                 {activeTab === 'sources' && (
                   <div className='flex flex-col h-full mt-4'>
                     {/* 搜索框 */}
-                    <div className='mb-3 flex-shrink-0 px-1'>
+                    <div className='mb-3 shrink-0 px-1'>
                       <div className='relative'>
                         <input
                           type='text'
@@ -1758,7 +1758,7 @@ function LivePageClient() {
                                   }`.trim()}
                               >
                                 {/* 图标 */}
-                                <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0'>
+                                <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center shrink-0'>
                                   <Radio className='w-6 h-6 text-gray-500' />
                                 </div>
 
@@ -1815,9 +1815,9 @@ function LivePageClient() {
           <div className='pt-4'>
             <div className='flex flex-col lg:flex-row gap-4'>
               {/* 频道图标+名称 - 在小屏幕上占100%，大屏幕占20% */}
-              <div className='w-full flex-shrink-0'>
+              <div className='w-full shrink-0'>
                 <div className='flex items-center gap-4'>
-                  <div className='w-20 h-20 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                  <div className='w-20 h-20 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0 overflow-hidden'>
                     {currentChannel.logo ? (
                       <img
                         src={`/api/proxy/logo?url=${encodeURIComponent(
@@ -1841,7 +1841,7 @@ function LivePageClient() {
                           e.stopPropagation();
                           handleToggleFavorite();
                         }}
-                        className='flex-shrink-0 hover:opacity-80 transition-opacity'
+                        className='shrink-0 hover:opacity-80 transition-opacity'
                         title={favorited ? '取消收藏' : '收藏'}
                       >
                         <FavoriteIcon filled={favorited} />
@@ -1867,7 +1867,7 @@ function LivePageClient() {
         {/* 分类选择弹窗 */}
         {isGroupSelectorOpen && (
           <div
-            className='fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm'
+            className='fixed inset-0 z-1000 flex items-center justify-center bg-black/50 backdrop-blur-sm'
             onClick={() => setIsGroupSelectorOpen(false)}
           >
             <div
@@ -2042,7 +2042,7 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
     );
   }
   return (
-    <Heart className='h-6 w-6 stroke-[1] text-gray-600 dark:text-gray-300' />
+    <Heart className='h-6 w-6 stroke-1 text-gray-600 dark:text-gray-300' />
   );
 };
 

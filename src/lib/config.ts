@@ -62,14 +62,14 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   let fileConfig: ConfigFileStruct;
   try {
     fileConfig = JSON.parse(adminConfig.ConfigFile) as ConfigFileStruct;
-  } catch (e) {
+  } catch {
     fileConfig = {} as ConfigFileStruct;
   }
 
   // 合并文件中的源信息
   const apiSitesFromFile = Object.entries(fileConfig.api_site || []);
   const currentApiSites = new Map(
-    (adminConfig.SourceConfig || []).map((s) => [s.key, s])
+    (adminConfig.SourceConfig || []).map((s) => [s.key, s]),
   );
 
   apiSitesFromFile.forEach(([key, site]) => {
@@ -112,7 +112,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   // 覆盖 CustomCategories
   const customCategoriesFromFile = fileConfig.custom_category || [];
   const currentCustomCategories = new Map(
-    (adminConfig.CustomCategories || []).map((c) => [c.query + c.type, c])
+    (adminConfig.CustomCategories || []).map((c) => [c.query + c.type, c]),
   );
 
   customCategoriesFromFile.forEach((category) => {
@@ -136,7 +136,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   // 检查现有 CustomCategories 是否在 fileConfig.custom_category 中，如果不在则标记为 custom
   const customCategoriesFromFileKeys = new Set(
-    customCategoriesFromFile.map((c) => c.query + c.type)
+    customCategoriesFromFile.map((c) => c.query + c.type),
   );
   currentCustomCategories.forEach((category) => {
     if (!customCategoriesFromFileKeys.has(category.query + category.type)) {
@@ -149,7 +149,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   const livesFromFile = Object.entries(fileConfig.lives || []);
   const currentLives = new Map(
-    (adminConfig.LiveConfig || []).map((l) => [l.key, l])
+    (adminConfig.LiveConfig || []).map((l) => [l.key, l]),
   );
   livesFromFile.forEach(([key, site]) => {
     const existingLive = currentLives.get(key);
@@ -197,12 +197,12 @@ async function getInitConfig(
     URL: '',
     AutoUpdate: false,
     LastCheck: '',
-  }
+  },
 ): Promise<AdminConfig> {
   let cfgFile: ConfigFileStruct;
   try {
     cfgFile = JSON.parse(configFile) as ConfigFileStruct;
-  } catch (e) {
+  } catch {
     cfgFile = {} as ConfigFileStruct;
   }
   const adminConfig: AdminConfig = {
@@ -300,6 +300,53 @@ async function getInitConfig(
   return adminConfig;
 }
 
+/**
+ * 获取本地模式的默认配置（无数据库时使用）
+ * 这个配置可以让管理页面正常渲染，用户可以在浏览器 localStorage 中保存配置
+ */
+export function getLocalModeConfig(): AdminConfig {
+  const adminConfig: AdminConfig = {
+    ConfigFile: '',
+    ConfigSubscribtion: {
+      URL: '',
+      AutoUpdate: false,
+      LastCheck: '',
+    },
+    SiteConfig: {
+      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'DecoTV',
+      Announcement:
+        process.env.ANNOUNCEMENT ||
+        '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
+      SearchDownstreamMaxPage:
+        Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5,
+      SiteInterfaceCacheTime: 7200,
+      DoubanProxyType:
+        process.env.NEXT_PUBLIC_DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent',
+      DoubanProxy: process.env.NEXT_PUBLIC_DOUBAN_PROXY || '',
+      DoubanImageProxyType:
+        process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE ||
+        'cmliussss-cdn-tencent',
+      DoubanImageProxy: process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY || '',
+      DisableYellowFilter:
+        process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
+      FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
+    },
+    UserConfig: {
+      Users: [
+        {
+          username: process.env.USERNAME || 'admin',
+          role: 'owner',
+          banned: false,
+        },
+      ],
+    },
+    SourceConfig: [],
+    CustomCategories: [],
+    LiveConfig: [],
+  };
+  return adminConfig;
+}
+
 export async function getConfig(): Promise<AdminConfig> {
   // 直接使用内存缓存
   if (cachedConfig) {
@@ -363,10 +410,10 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   });
   // 过滤站长
   const originOwnerCfg = adminConfig.UserConfig.Users.find(
-    (u) => u.username === ownerUser
+    (u) => u.username === ownerUser,
   );
   adminConfig.UserConfig.Users = adminConfig.UserConfig.Users.filter(
-    (user) => user.username !== ownerUser
+    (user) => user.username !== ownerUser,
   );
   // 其他用户不得拥有 owner 权限
   adminConfig.UserConfig.Users.forEach((user) => {
@@ -402,7 +449,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       }
       seenCustomCategoryKeys.add(category.query + category.type);
       return true;
-    }
+    },
   );
 
   // 直播源去重
@@ -430,7 +477,7 @@ export async function resetConfig() {
   }
   const adminConfig = await getInitConfig(
     originConfig.ConfigFile,
-    originConfig.ConfigSubscribtion
+    originConfig.ConfigSubscribtion,
   );
   cachedConfig = adminConfig;
   await db.saveAdminConfig(adminConfig);
@@ -479,7 +526,7 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
       const tagConfig = config.UserConfig.Tags?.find((t) => t.name === tagName);
       if (tagConfig && tagConfig.enabledApis) {
         tagConfig.enabledApis.forEach((apiKey) =>
-          enabledApisFromTags.add(apiKey)
+          enabledApisFromTags.add(apiKey),
         );
       }
     });

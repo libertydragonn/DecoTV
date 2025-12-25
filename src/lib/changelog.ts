@@ -11,6 +11,30 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '0.9.0',
+    date: '2025-12-20',
+    added: [
+      '⬆️ 重大升级: Next.js 14 → 16.1.0，获得更好的性能与 React 19 支持',
+      '⬆️ 重大升级: Tailwind CSS 3.4 → 4.1.18，使用新的 CSS 原生配置方式',
+      '⬆️ React 18 → 19.0.0，支持最新的 React 特性与自动优化',
+      '⬆️ TypeScript 4.9 → 5.8.3，获得更好的类型检查与语言特性',
+      '⬆️ ESLint 8 → 9.28.0，迁移到新的 flat config 格式',
+      '⬆️ Jest 27 → 29.7.0，支持最新的测试特性',
+      '⬆️ Prettier 2 → 3.5.3，支持最新的代码格式化规则',
+    ],
+    changed: [
+      '🎨 优化亮色模式下的文字可读性，修复导航栏按钮文字过淡的问题',
+      '🎨 优化播放页详情区域的文字对比度，移除透明度使用明确颜色',
+      '🎨 修复亮色模式下灰色色板对比度不足的问题',
+      '🔧 Tailwind 配置迁移到 CSS 原生 `@theme` 指令',
+      '🔧 启用 Next.js Turbopack 构建模式，提升开发体验',
+      '🎨 更新 Tailwind CSS 类名为规范写法（bg-gradient → bg-linear 等）',
+    ],
+    fixed: [
+      '🐛 修复亮色模式下影片卡片标题和来源名称显示不清晰的问题',
+    ],
+  },
+  {
     version: '0.8.0',
     date: '2025-12-12',
     added: [

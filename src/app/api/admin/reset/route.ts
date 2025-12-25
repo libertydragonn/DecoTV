@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
@@ -9,12 +7,17 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  if (storageType === 'localstorage') {
+  const isLocalMode = storageType === 'localstorage';
+
+  // 本地模式：返回成功，前端需要清除 localStorage
+  if (isLocalMode) {
     return NextResponse.json(
       {
-        error: '不支持本地存储进行管理员配置',
+        ok: true,
+        storageMode: 'local',
+        message: '请在前端清除 localStorage 配置',
       },
-      { status: 400 }
+      { headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Cache-Control': 'no-store', // 管理员配置不缓存
         },
-      }
+      },
     );
   } catch (error) {
     return NextResponse.json(
@@ -45,7 +48,7 @@ export async function GET(request: NextRequest) {
         error: '重置管理员配置失败',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

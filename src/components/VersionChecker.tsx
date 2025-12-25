@@ -203,7 +203,7 @@ export default function VersionChecker() {
                   <ul className='text-sm text-orange-600 dark:text-orange-400 space-y-1.5'>
                     {remote.releaseNotes.map((note, index) => (
                       <li key={index} className='flex items-start space-x-2'>
-                        <CheckCircle className='w-3.5 h-3.5 flex-shrink-0 mt-0.5' />
+                        <CheckCircle className='w-3.5 h-3.5 shrink-0 mt-0.5' />
                         <span>{note}</span>
                       </li>
                     ))}
@@ -225,7 +225,7 @@ export default function VersionChecker() {
               rel='noopener noreferrer'
               className='
                 inline-flex items-center space-x-2 px-4 py-2 ml-4
-                bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-md text-sm font-medium
+                bg-linear-to-r from-orange-600 to-red-600 text-white rounded-md text-sm font-medium
                 hover:from-orange-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg
                 transform hover:scale-105
               '

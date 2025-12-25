@@ -47,14 +47,14 @@ export default function Toast({
 
   return (
     <div
-      className={`fixed bottom-20 right-5 z-[10000] transform transition-all duration-300 ${
+      className={`fixed bottom-20 right-5 z-10000 transform transition-all duration-300 ${
         isLeaving ? 'translate-x-[200%] opacity-0' : 'translate-x-0 opacity-100'
       }`}
     >
       <div
-        className={`${colors[type]} text-white px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 min-w-[280px] max-w-[400px]`}
+        className={`${colors[type]} text-white px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 min-w-70 max-w-100`}
       >
-        <div className='flex-shrink-0'>{icons[type]}</div>
+        <div className='shrink-0'>{icons[type]}</div>
         <div className='flex-1 text-sm font-medium whitespace-pre-line'>
           {message}
         </div>

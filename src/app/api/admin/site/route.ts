@@ -1,23 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,no-console */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { getConfig, getLocalModeConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  if (storageType === 'localstorage') {
-    return NextResponse.json(
-      {
-        error: '不支持本地存储进行管理员配置',
-      },
-      { status: 400 }
-    );
-  }
+  const isLocalMode = storageType === 'localstorage';
 
   try {
     const body = await request.json();
@@ -68,13 +61,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
+    // 本地模式：返回成功但不保存到数据库（由前端保存到 localStorage）
+    if (isLocalMode) {
+      const localConfig = getLocalModeConfig();
+      localConfig.SiteConfig = {
+        SiteName,
+        Announcement,
+        SearchDownstreamMaxPage,
+        SiteInterfaceCacheTime,
+        DoubanProxyType,
+        DoubanProxy,
+        DoubanImageProxyType,
+        DoubanImageProxy,
+        DisableYellowFilter,
+        FluidSearch,
+      };
+      return NextResponse.json({
+        message: '站点配置更新成功（本地模式）',
+        Config: localConfig,
+        storageMode: 'local',
+      });
+    }
+
     const adminConfig = await getConfig();
 
     // 权限校验
     if (username !== process.env.USERNAME) {
       // 管理员
       const user = adminConfig.UserConfig.Users.find(
-        (u) => u.username === username
+        (u) => u.username === username,
       );
       if (!user || user.role !== 'admin' || user.banned) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
@@ -104,7 +119,7 @@ export async function POST(request: NextRequest) {
         headers: {
           'Cache-Control': 'no-store', // 不缓存结果
         },
-      }
+      },
     );
   } catch (error) {
     console.error('更新站点配置失败:', error);
@@ -113,7 +128,7 @@ export async function POST(request: NextRequest) {
         error: '更新站点配置失败',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

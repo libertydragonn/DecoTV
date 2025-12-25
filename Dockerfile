@@ -22,8 +22,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # 复制全部源代码
 COPY . .
 
-# 在构建阶段也显式设置 DOCKER_ENV，
+# 在构建阶段也显式设置 DOCKER_ENV 和 DOCKER_BUILD
 ENV DOCKER_ENV=true
+ENV DOCKER_BUILD=true
 
 # 生成生产构建
 RUN pnpm run build

@@ -26,9 +26,11 @@ interface BaseBody {
 
 export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  const isLocalMode = storageType === 'localstorage';
+  const hasRedis = !!(process.env.REDIS_URL || process.env.KV_REST_API_URL);
+  const isLocalMode = storageType === 'localstorage' && !hasRedis;
 
-  // 本地模式：返回成功但提示前端保存到 localStorage
+  // 🔐 本地模式（无数据库）：跳过认证，返回成功
+  // 安全性说明：仅当没有配置任何数据库时才启用此模式
   if (isLocalMode) {
     return NextResponse.json(
       {

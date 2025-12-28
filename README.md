@@ -5,13 +5,13 @@
 <div align="center"src="public/logo.png" alt="DecoTV Logo" width="120">
 </div>
 
-> 🎬 **DecoTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、云端存储，让你可以随时随地畅享海量免费影视内容。
+> 🎬 **DecoTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 16** + **Tailwind&nbsp;CSS 4** + **TypeScript 5** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、云端存储，让你可以随时随地畅享海量免费影视内容。**支持本地无数据库模式、CMS 全量代理、隐私纵深防御等企业级特性。**
 
 <div align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178c6?logo=typescript)
+![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8?logo=tailwindcss)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
 
@@ -51,10 +51,13 @@
 - 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示。
 - ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer。
 - ❤️ **收藏 + 继续观看**：支持 Kvrocks/Redis/Upstash 存储，多端同步进度。
-- � **用户注册系统**：支持用户自助注册（可选），带图形验证码防机器人。
-- �📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
+- 👤 **用户注册系统**：支持用户自助注册（可选），带图形验证码防机器人。
+- 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
 - 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
 - 👿 **智能去广告**：自动跳过视频中的切片广告（实验性）。
+- 🏠 **本地无数据库模式**：无需 Redis，自动降级为浏览器 localStorage 存储。
+- 🌐 **CMS 全量代理**：根绝 Mixed Content 和 CORS 问题，支持任意第三方源。
+- 🛡️ **隐私纵深防御**：双重熔断机制，从配置到代理层隔离成人内容。
 
 ### 注意：部署后项目为空壳项目，无内置播放源和直播源，需要自行收集
 
@@ -87,11 +90,11 @@
 
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
-| 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
-| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
-| 语言      | TypeScript 4                                                                                          |
+| 前端框架  | [Next.js 16](https://nextjs.org/) · App Router · Turbopack                                            |
+| UI & 样式 | [Tailwind&nbsp;CSS 4](https://tailwindcss.com/)                                                       |
+| 语言      | TypeScript 5                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
-| 代码质量  | ESLint · Prettier · Jest                                                                              |
+| 代码质量  | ESLint 9 · Prettier 3 · Jest 29                                                                       |
 | 部署      | Docker                                                                                                |
 
 ## 🚀 部署
@@ -119,7 +122,7 @@ DecoTV 提供以下 Docker 镜像标签：
 | 标签     | 说明         | 使用场景                         |
 | -------- | ------------ | -------------------------------- |
 | `latest` | 最新构建版本 | 总是使用最新代码，包含所有小更新 |
-| `v0.4.0` | 特定版本号   | 固定版本部署，便于版本管理和回滚 |
+| `v1.0.0` | 特定版本号   | 固定版本部署，便于版本管理和回滚 |
 
 **推荐使用方式**：
 
@@ -128,10 +131,10 @@ DecoTV 提供以下 Docker 镜像标签：
 docker pull ghcr.io/decohererk/decotv:latest
 
 # 方式2：使用特定版本号（生产环境推荐）
-docker pull ghcr.io/decohererk/decotv:v0.4.0
+docker pull ghcr.io/decohererk/decotv:v1.0.0
 
 # 方式3：回滚到旧版本
-docker pull ghcr.io/decohererk/decotv:v0.3.0
+docker pull ghcr.io/decohererk/decotv:v0.9.0
 ```
 
 **版本号标签优势**：
@@ -148,7 +151,7 @@ docker pull ghcr.io/decohererk/decotv:v0.3.0
 ```yml
 services:
   decotv-core:
-    image: ghcr.io/decohererk/decotv:latest # 或使用 :v0.4.0 固定版本
+    image: ghcr.io/decohererk/decotv:latest # 或使用 :v1.0.0 固定版本
     container_name: decotv-core
     restart: on-failure
     ports:
@@ -182,7 +185,7 @@ volumes:
 ```yml
 services:
   decotv-core:
-    image: ghcr.io/decohererk/decotv:latest # 或使用 :v0.4.0 固定版本
+    image: ghcr.io/decohererk/decotv:latest # 或使用 :v1.0.0 固定版本
     container_name: decotv-core
     restart: on-failure
     ports:
@@ -219,7 +222,7 @@ networks:
 ```yml
 services:
   decotv-core:
-    image: ghcr.io/decohererk/decotv:latest # 或使用 :v0.4.0 固定版本
+    image: ghcr.io/decohererk/decotv:latest # 或使用 :v1.0.0 固定版本
     container_name: decotv-core
     restart: on-failure
     ports:

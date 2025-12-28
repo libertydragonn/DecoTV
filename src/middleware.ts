@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
     const isValidSignature = await verifySignature(
       authInfo.username,
       authInfo.signature,
-      process.env.PASSWORD || ''
+      process.env.PASSWORD || '',
     );
 
     // 签名验证通过即可
@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
 async function verifySignature(
   data: string,
   signature: string,
-  secret: string
+  secret: string,
 ): Promise<boolean> {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
@@ -99,12 +99,12 @@ async function verifySignature(
       keyData,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
-      ['verify']
+      ['verify'],
     );
 
     // 将十六进制字符串转换为Uint8Array
     const signatureBuffer = new Uint8Array(
-      signature.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+      signature.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [],
     );
 
     // 验证签名
@@ -112,7 +112,7 @@ async function verifySignature(
       'HMAC',
       key,
       signatureBuffer,
-      messageData
+      messageData,
     );
   } catch (error) {
     console.error('签名验证失败:', error);
@@ -123,7 +123,7 @@ async function verifySignature(
 // 处理认证失败的情况
 function handleAuthFailure(
   request: NextRequest,
-  pathname: string
+  pathname: string,
 ): NextResponse {
   // 如果是 API 路由，返回 401 状态码
   if (pathname.startsWith('/api')) {
@@ -152,6 +152,31 @@ function shouldSkipAuth(pathname: string): boolean {
     '/api/tvbox/diagnose',
     '/register', // 允许访问注册页面
   ];
+
+  // 🔐 本地模式 (无数据库) 下，允许跳过 admin API 鉴权
+  // 这是为了解决"鸡生蛋"问题：用户需要先配置系统才能登录，但登录又需要先有配置
+  // 安全性说明：仅当 STORAGE_TYPE=localstorage 且没有设置数据库连接时才生效
+  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  const hasRedis = !!(process.env.REDIS_URL || process.env.KV_REST_API_URL);
+
+  if (storageType === 'localstorage' && !hasRedis) {
+    // 本地模式下允许访问 admin 相关 API（用于获取/保存配置）
+    const localModeAllowedPaths = [
+      '/api/admin/config',
+      '/api/admin/site',
+      '/api/admin/source',
+      '/api/admin/category',
+      '/api/admin/live',
+      '/api/admin/user',
+      '/api/admin/config_file',
+      '/api/admin/reset',
+      '/admin', // 允许直接访问 admin 页面
+    ];
+
+    if (localModeAllowedPaths.some((path) => pathname.startsWith(path))) {
+      return true;
+    }
+  }
 
   return skipPaths.some((path) => pathname.startsWith(path));
 }

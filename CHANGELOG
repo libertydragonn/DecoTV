@@ -1,3 +1,46 @@
+## [1.0.0] - 2025-12-28 🎉 Stable Release
+
+> **DecoTV v1.0.0** 是首个正式稳定版本。此版本包含底层架构重构、网络代理层增强、安全纵深防御机制、以及多项 UI/UX 改进。
+
+### ✨ Features (新功能)
+
+- **框架升级**: 核心框架升级至 **Next.js 16.1.0**，支持 React 19 和 Turbopack 构建
+- **混合存储策略 (Hybrid Storage)**: 
+  - 未配置 Redis/数据库时自动降级为浏览器 `localStorage` 存储
+  - Docker 本地部署无需依赖外部数据库即可正常使用
+- **CMS 全量代理 (`/api/proxy/cms`)**: 
+  - 彻底解决 HTTPS 环境下的 **Mixed Content (混合内容)** 阻断问题
+  - 彻底解决第三方源的 **CORS (跨域)** 限制
+  - 代理请求自动伪装 `User-Agent`，防止被采集站拦截 (500/403 Error)
+- **FilterBar 多行布局**: 视频源/分类选择器改为 **Flex-Wrap** 自动换行，PC 端信息展示更高效
+- **LunaTV 模式降级**: 切换源后若过滤失败则显示全部分类，消除"空白等待"
+- **自动选中首分类**: 切换视频源后自动命中第一个分类并加载视频
+
+### 🛡️ Security (安全)
+
+- **纵深防御策略 (Defense in Depth)**: 针对成人内容实施双重熔断机制
+  - **Layer 1 - Config 白名单**: 配置接口 (`/api/tvbox/config`) 默认实行严格白名单，物理剔除 `is_adult` 标记的源
+  - **Layer 2 - Proxy Firewall**: 代理接口实施流量阻断，即使客户端绕过配置发起请求，若目标为成人源则直接拦截返回空数据
+  - **OrionTV Fix**: 彻底解决 OrionTV 等客户端因缓存或绕过配置导致的隐私泄露问题
+- **严格安全默认**: `shouldFilterAdult` 默认为 `true`，仅 `filter=off` 参数可关闭过滤
+
+### 🐛 Fixes (修复)
+
+- **Admin 面板鉴权**: 修复本地模式 (无数据库) 下管理后台报 `Unauthorized` 的问题
+- **DndContext Hydration**: 修复后台管理表格因 `DndContext` 嵌套错误导致的 SSR 页面崩溃
+- **分类为空**: 修复切换视频源后分类栏为空的问题 (状态同步 + 全量代理)
+- **代理 500 错误**: CMS 代理从 Edge Runtime 切换回 **Node.js Runtime**，提升 HTTP 兼容性
+- **无限重渲染**: 移除 `DoubanSelector` 中的频繁 `console.log`，修复性能问题
+- **HTTP 图片阻断**: 通过 `wsrv.nl` 公共图片代理解决 HTTPS 页面加载 HTTP 图片失败
+
+### ♻️ Refactor (重构)
+
+- **DoubanSelector**: 移除横向滚动和滑动指示器，重写为卡片式多行布局 (-158 行代码)
+- **handleSourceChange**: 重写核心逻辑，实现状态同步和降级显示
+- **Proxy 架构**: 所有外部 URL (HTTP + HTTPS) 统一走 `/api/proxy/cms`
+
+---
+
 ## [0.9.0] - 2025-12-20
 
 ### Added

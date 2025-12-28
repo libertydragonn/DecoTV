@@ -10,10 +10,57 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-  const isLocalMode = storageType === 'localstorage';
+  const hasRedis = !!(process.env.REDIS_URL || process.env.KV_REST_API_URL);
+  const isLocalMode = storageType === 'localstorage' && !hasRedis;
 
   try {
     const body = await request.json();
+
+    // 🔐 本地模式（无数据库）：跳过认证，返回成功
+    // 安全性说明：仅当没有配置任何数据库时才启用此模式
+    if (isLocalMode) {
+      const {
+        SiteName,
+        Announcement,
+        SearchDownstreamMaxPage,
+        SiteInterfaceCacheTime,
+        DoubanProxyType,
+        DoubanProxy,
+        DoubanImageProxyType,
+        DoubanImageProxy,
+        DisableYellowFilter,
+        FluidSearch,
+      } = body as {
+        SiteName: string;
+        Announcement: string;
+        SearchDownstreamMaxPage: number;
+        SiteInterfaceCacheTime: number;
+        DoubanProxyType: string;
+        DoubanProxy: string;
+        DoubanImageProxyType: string;
+        DoubanImageProxy: string;
+        DisableYellowFilter: boolean;
+        FluidSearch: boolean;
+      };
+
+      const localConfig = getLocalModeConfig();
+      localConfig.SiteConfig = {
+        SiteName,
+        Announcement,
+        SearchDownstreamMaxPage,
+        SiteInterfaceCacheTime,
+        DoubanProxyType,
+        DoubanProxy,
+        DoubanImageProxyType,
+        DoubanImageProxy,
+        DisableYellowFilter,
+        FluidSearch,
+      };
+      return NextResponse.json({
+        message: '站点配置更新成功（本地模式）',
+        storageMode: 'local',
+      });
+    }
 
     const authInfo = getAuthInfoFromCookie(request);
     if (!authInfo || !authInfo.username) {
@@ -59,28 +106,6 @@ export async function POST(request: NextRequest) {
       typeof FluidSearch !== 'boolean'
     ) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
-    }
-
-    // 本地模式：返回成功但不保存到数据库（由前端保存到 localStorage）
-    if (isLocalMode) {
-      const localConfig = getLocalModeConfig();
-      localConfig.SiteConfig = {
-        SiteName,
-        Announcement,
-        SearchDownstreamMaxPage,
-        SiteInterfaceCacheTime,
-        DoubanProxyType,
-        DoubanProxy,
-        DoubanImageProxyType,
-        DoubanImageProxy,
-        DisableYellowFilter,
-        FluidSearch,
-      };
-      return NextResponse.json({
-        message: '站点配置更新成功（本地模式）',
-        Config: localConfig,
-        storageMode: 'local',
-      });
     }
 
     const adminConfig = await getConfig();

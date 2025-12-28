@@ -2,7 +2,7 @@
 
 'use client';
 
-import { ChevronLeft, ChevronRight, Database, Loader2 } from 'lucide-react';
+import { Database, Loader2 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiSite } from '@/lib/config';
@@ -59,19 +59,13 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   onSourceCategoryChange,
   selectedSourceCategory,
 }) => {
-  // 数据源选择器的 refs 和状态
+  // 数据源选择器的 refs
   const sourceContainerRef = useRef<HTMLDivElement>(null);
   const sourceButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [sourceIndicatorStyle, setSourceIndicatorStyle] = useState<{
-    left: number;
-    width: number;
-  }>({ left: 0, width: 0 });
 
-  // 源分类选择器的 refs 和状态
+  // 源分类选择器的 refs
   const sourceCategoryContainerRef = useRef<HTMLDivElement>(null);
   const sourceCategoryButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [sourceCategoryIndicatorStyle, setSourceCategoryIndicatorStyle] =
-    useState<{ left: number; width: number }>({ left: 0, width: 0 });
 
   // 为不同的选择器创建独立的refs和状态
   const primaryContainerRef = useRef<HTMLDivElement>(null);
@@ -149,41 +143,44 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   };
 
   // 更新指示器位置的通用函数
-  const updateIndicatorPosition = (
-    activeIndex: number,
-    containerRef: React.RefObject<HTMLDivElement | null>,
-    buttonRefs: React.MutableRefObject<(HTMLButtonElement | null)[]>,
-    setIndicatorStyle: React.Dispatch<
-      React.SetStateAction<{ left: number; width: number }>
-    >,
-  ) => {
-    if (
-      activeIndex >= 0 &&
-      buttonRefs.current[activeIndex] &&
-      containerRef.current
-    ) {
-      const timeoutId = setTimeout(() => {
-        const button = buttonRefs.current[activeIndex];
-        const container = containerRef.current;
-        if (button && container) {
-          const buttonRect = button.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
+  const updateIndicatorPosition = useCallback(
+    (
+      activeIndex: number,
+      containerRef: React.RefObject<HTMLDivElement | null>,
+      buttonRefs: React.MutableRefObject<(HTMLButtonElement | null)[]>,
+      setIndicatorStyle: React.Dispatch<
+        React.SetStateAction<{ left: number; width: number }>
+      >,
+    ) => {
+      if (
+        activeIndex >= 0 &&
+        buttonRefs.current[activeIndex] &&
+        containerRef.current
+      ) {
+        const timeoutId = setTimeout(() => {
+          const button = buttonRefs.current[activeIndex];
+          const container = containerRef.current;
+          if (button && container) {
+            const buttonRect = button.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
 
-          if (buttonRect.width > 0) {
-            setIndicatorStyle({
-              left: buttonRect.left - containerRect.left,
-              width: buttonRect.width,
-            });
+            if (buttonRect.width > 0) {
+              setIndicatorStyle({
+                left: buttonRect.left - containerRect.left,
+                width: buttonRect.width,
+              });
+            }
           }
-        }
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  };
+        }, 0);
+        return () => clearTimeout(timeoutId);
+      }
+    },
+    [],
+  );
 
-  // 组件挂载时立即计算初始位置
-  useEffect(() => {
-    // 主选择器初始位置
+  // 重新计算所有指示器位置的函数
+  const recalculateAllIndicators = useCallback(() => {
+    // 主选择器
     if (type === 'movie') {
       const activeIndex = moviePrimaryOptions.findIndex(
         (opt) =>
@@ -229,7 +226,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
       );
     }
 
-    // 副选择器初始位置
+    // 副选择器
     let secondaryActiveIndex = -1;
     if (type === 'movie') {
       secondaryActiveIndex = movieSecondaryOptions.findIndex(
@@ -256,7 +253,44 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         setSecondaryIndicatorStyle,
       );
     }
-  }, [type]); // 只在type变化时重新计算
+  }, [
+    type,
+    primarySelection,
+    secondarySelection,
+    updateIndicatorPosition,
+    moviePrimaryOptions,
+    tvPrimaryOptions,
+    animePrimaryOptions,
+    showPrimaryOptions,
+    movieSecondaryOptions,
+    tvSecondaryOptions,
+    showSecondaryOptions,
+  ]);
+
+  // 监听窗口 resize 事件，防抖更新指示器位置
+  useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+
+    const handleResize = () => {
+      // 防抖：窗口大小变化后 100ms 再更新
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        recalculateAllIndicators();
+      }, 100);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [recalculateAllIndicators]);
+
+  // 组件挂载时立即计算初始位置
+  useEffect(() => {
+    recalculateAllIndicators();
+  }, [type, recalculateAllIndicators]);
 
   // 监听主选择器变化
   useEffect(() => {
@@ -305,7 +339,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
       );
       return cleanup;
     }
-  }, [primarySelection]);
+  }, [primarySelection, updateIndicatorPosition]);
 
   // 监听副选择器变化
   useEffect(() => {
@@ -338,7 +372,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
       );
       return cleanup;
     }
-  }, [secondarySelection]);
+  }, [secondarySelection, updateIndicatorPosition]);
 
   // 渲染胶囊式选择器
   const renderCapsuleSelector = (
@@ -400,252 +434,124 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
     ...sources.map((s) => ({ label: s.name, value: s.key })),
   ];
 
-  // 更新数据源指示器位置
-  useEffect(() => {
-    const activeIndex = sourceOptions.findIndex(
-      (opt) => opt.value === currentSource,
-    );
-    if (
-      activeIndex >= 0 &&
-      sourceButtonRefs.current[activeIndex] &&
-      sourceContainerRef.current
-    ) {
-      const timeoutId = setTimeout(() => {
-        const button = sourceButtonRefs.current[activeIndex];
-        const container = sourceContainerRef.current;
-        if (button && container) {
-          const buttonRect = button.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          if (buttonRect.width > 0) {
-            setSourceIndicatorStyle({
-              left: buttonRect.left - containerRect.left,
-              width: buttonRect.width,
-            });
-          }
-        }
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentSource, sources]);
-
-  // 更新源分类指示器位置
-  useEffect(() => {
-    if (sourceCategories.length === 0 || !selectedSourceCategory) return;
-
-    const activeIndex = sourceCategories.findIndex(
-      (cat) => cat.type_id === selectedSourceCategory.type_id,
-    );
-    if (
-      activeIndex >= 0 &&
-      sourceCategoryButtonRefs.current[activeIndex] &&
-      sourceCategoryContainerRef.current
-    ) {
-      const timeoutId = setTimeout(() => {
-        const button = sourceCategoryButtonRefs.current[activeIndex];
-        const container = sourceCategoryContainerRef.current;
-        if (button && container) {
-          const buttonRect = button.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          if (buttonRect.width > 0) {
-            setSourceCategoryIndicatorStyle({
-              left: buttonRect.left - containerRect.left,
-              width: buttonRect.width,
-            });
-          }
-        }
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [selectedSourceCategory, sourceCategories]);
-
-  // 滚动控制状态
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // 检查滚动状态，决定是否显示箭头
-  const checkScrollArrows = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setShowLeftArrow(scrollLeft > 5);
-    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 5);
-  }, []);
-
-  // 滚动控制函数
-  const scrollSources = useCallback((direction: 'left' | 'right') => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const scrollAmount = direction === 'left' ? -200 : 200;
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  }, []);
-
-  // 监听滚动容器变化
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    // 初始检查
-    checkScrollArrows();
-
-    // 监听滚动事件
-    container.addEventListener('scroll', checkScrollArrows);
-
-    // 监听窗口大小变化
-    window.addEventListener('resize', checkScrollArrows);
-
-    return () => {
-      container.removeEventListener('scroll', checkScrollArrows);
-      window.removeEventListener('resize', checkScrollArrows);
-    };
-  }, [sources, isLoadingSources, checkScrollArrows]);
-
-  // 渲染数据源选择器（横向滚动样式 + 左右箭头控制）
+  // 渲染数据源选择器（多行自动换行布局）
   const renderSourceSelector = () => {
     if (sources.length === 0 && !isLoadingSources) {
       return null;
     }
 
     return (
-      <div className='flex flex-row items-center gap-2'>
-        <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 shrink-0 whitespace-nowrap flex items-center gap-1'>
+      <div className='flex flex-col gap-2 mb-4'>
+        <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1'>
           <Database className='w-3.5 h-3.5' />
           数据源
+          <span className='text-xs text-gray-400 dark:text-gray-500 ml-1'>
+            ({sourceOptions.length})
+          </span>
         </span>
-        {/* 滚动容器包装器 - 相对定位用于箭头按钮 */}
-        <div className='relative flex-1 min-w-0'>
-          {/* 左侧滚动箭头 */}
-          {showLeftArrow && (
-            <button
-              onClick={() => scrollSources('left')}
-              className='absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-md backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-white dark:hover:bg-gray-600 transition-all duration-200'
-              aria-label='向左滚动'
-            >
-              <ChevronLeft className='w-4 h-4 text-gray-600 dark:text-gray-300' />
-            </button>
-          )}
-
-          {/* 滚动内容区域 */}
-          <div
-            ref={scrollContainerRef}
-            className='overflow-x-auto scrollbar-hide px-1'
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {isLoadingSources ? (
-              <div className='flex items-center gap-2 px-3 py-2 text-sm text-gray-500'>
-                <Loader2 className='w-4 h-4 animate-spin' />
-                <span>加载中...</span>
-              </div>
-            ) : (
-              <div
-                ref={sourceContainerRef}
-                className='relative inline-flex bg-gray-200/60 rounded-full p-0.5 sm:p-1 dark:bg-gray-700/60 backdrop-blur-sm'
-              >
-                {/* 滑动指示器 */}
-                {sourceIndicatorStyle.width > 0 && (
-                  <div
-                    className='absolute top-0.5 bottom-0.5 sm:top-1 sm:bottom-1 bg-white dark:bg-gray-500 rounded-full shadow-sm transition-all duration-300 ease-out'
-                    style={{
-                      left: `${sourceIndicatorStyle.left}px`,
-                      width: `${sourceIndicatorStyle.width}px`,
-                    }}
-                  />
-                )}
-                {sourceOptions.map((option, index) => {
-                  const isActive = currentSource === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      ref={(el) => {
-                        sourceButtonRefs.current[index] = el;
-                      }}
-                      onClick={() => onSourceChange?.(option.value)}
-                      className={`relative z-10 px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                        isActive
-                          ? 'text-gray-900 dark:text-gray-100 cursor-default'
-                          : 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {/* 多行换行容器 */}
+        {isLoadingSources ? (
+          <div className='flex items-center gap-2 px-3 py-2 text-sm text-gray-500'>
+            <Loader2 className='w-4 h-4 animate-spin' />
+            <span>加载中...</span>
           </div>
-
-          {/* 右侧滚动箭头 */}
-          {showRightArrow && (
-            <button
-              onClick={() => scrollSources('right')}
-              className='absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 dark:bg-gray-700/80 shadow-md backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-white dark:hover:bg-gray-600 transition-all duration-200'
-              aria-label='向右滚动'
-            >
-              <ChevronRight className='w-4 h-4 text-gray-600 dark:text-gray-300' />
-            </button>
-          )}
-        </div>
+        ) : (
+          <div
+            ref={sourceContainerRef}
+            className='flex flex-wrap gap-1.5 sm:gap-2 p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl'
+          >
+            {sourceOptions.map((option, index) => {
+              const isActive = currentSource === option.value;
+              return (
+                <button
+                  key={option.value}
+                  ref={(el) => {
+                    sourceButtonRefs.current[index] = el;
+                  }}
+                  onClick={() => onSourceChange?.(option.value)}
+                  className={`px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };
 
   // 渲染源分类选择器（当选择了特定数据源时显示）
   const renderSourceCategorySelector = () => {
-    if (currentSource === 'auto' || sourceCategories.length === 0) {
+    if (currentSource === 'auto') {
       return null;
     }
 
-    return (
-      <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
-        <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-12'>
-          分类
-        </span>
-        <div className='overflow-x-auto'>
-          {isLoadingCategories ? (
-            <div className='flex items-center gap-2 px-3 py-2 text-sm text-gray-500'>
-              <Loader2 className='w-4 h-4 animate-spin' />
-              <span>加载分类...</span>
-            </div>
-          ) : (
-            <div
-              ref={sourceCategoryContainerRef}
-              className='relative inline-flex bg-gray-200/60 rounded-full p-0.5 sm:p-1 dark:bg-gray-700/60 backdrop-blur-sm'
-            >
-              {/* 滑动指示器 */}
-              {sourceCategoryIndicatorStyle.width > 0 && (
-                <div
-                  className='absolute top-0.5 bottom-0.5 sm:top-1 sm:bottom-1 bg-white dark:bg-gray-500 rounded-full shadow-sm transition-all duration-300 ease-out'
-                  style={{
-                    left: `${sourceCategoryIndicatorStyle.left}px`,
-                    width: `${sourceCategoryIndicatorStyle.width}px`,
-                  }}
-                />
-              )}
-              {sourceCategories.map((category, index) => {
-                const isActive =
-                  selectedSourceCategory?.type_id === category.type_id;
-                return (
-                  <button
-                    key={category.type_id}
-                    ref={(el) => {
-                      sourceCategoryButtonRefs.current[index] = el;
-                    }}
-                    onClick={() => onSourceCategoryChange?.(category)}
-                    className={`relative z-10 px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
-                      isActive
-                        ? 'text-gray-900 dark:text-gray-100 cursor-default'
-                        : 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
-                    }`}
-                  >
-                    {category.type_name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+    if (sourceCategories.length === 0) {
+      // 显示空状态提示而不是直接返回 null
+      return (
+        <div className='flex flex-col gap-2'>
+          <div className='flex items-center justify-between'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400'>
+              {sources.find((s) => s.key === currentSource)?.name || '源'} 分类
+            </span>
+          </div>
+          <div className='text-sm text-gray-500 dark:text-gray-400 py-2'>
+            {isLoadingCategories
+              ? '加载中...'
+              : '该源暂无分类数据（可能受跨域限制）'}
+          </div>
         </div>
+      );
+    }
+
+    return (
+      <div className='flex flex-col gap-2 mb-4'>
+        <div className='flex items-center justify-between'>
+          <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400'>
+            {sources.find((s) => s.key === currentSource)?.name || '源'} 分类
+          </span>
+          <span className='text-xs text-gray-400 dark:text-gray-500'>
+            {sourceCategories.length} 个分类
+          </span>
+        </div>
+        {/* 多行换行容器 */}
+        {isLoadingCategories ? (
+          <div className='flex items-center gap-2 px-3 py-2 text-sm text-gray-500'>
+            <Loader2 className='w-4 h-4 animate-spin' />
+            <span>加载分类...</span>
+          </div>
+        ) : (
+          <div
+            ref={sourceCategoryContainerRef}
+            className='flex flex-wrap gap-1.5 sm:gap-2 p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl'
+          >
+            {sourceCategories.map((category, index) => {
+              const isActive =
+                selectedSourceCategory?.type_id === category.type_id;
+              return (
+                <button
+                  key={category.type_id}
+                  ref={(el) => {
+                    sourceCategoryButtonRefs.current[index] = el;
+                  }}
+                  onClick={() => onSourceCategoryChange?.(category)}
+                  className={`px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  {category.type_name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };

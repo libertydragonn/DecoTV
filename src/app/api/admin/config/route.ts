@@ -15,21 +15,25 @@ interface AdminConfigResultWithMode extends AdminConfigResult {
 
 export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  const hasRedis = !!(process.env.REDIS_URL || process.env.KV_REST_API_URL);
 
-  // 本地存储模式：返回降级配置而非错误
-  if (storageType === 'localstorage') {
-    // 仍需验证身份（本地模式下使用环境变量中的用户名）
+  // 🔐 本地存储模式（无数据库）：免登录访问
+  // 安全性说明：仅当没有配置任何数据库时才启用此模式
+  // 这解决了"鸡生蛋"问题：用户需要先进入面板配置系统
+  if (storageType === 'localstorage' && !hasRedis) {
+    // 尝试获取认证信息（可能为空）
     const authInfo = getAuthInfoFromCookie(request);
-    if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
-    // 返回本地模式配置，附带 storageMode 标识
+    // 本地模式下，即使没有登录也返回配置
+    // 角色判断：如果有认证信息且用户名匹配，则为 owner；否则默认 owner（本地模式）
+    const isOwner =
+      !authInfo?.username || authInfo.username === process.env.USERNAME;
+
     const localConfig = getLocalModeConfig();
     const result: AdminConfigResultWithMode = {
-      Role: authInfo.username === process.env.USERNAME ? 'owner' : 'admin',
+      Role: isOwner ? 'owner' : 'admin',
       Config: localConfig,
-      storageMode: 'local', // 告诉前端当前是本地模式
+      storageMode: 'local', // 告诉前端当前是本地模式（无数据库）
     };
 
     return NextResponse.json(result, {

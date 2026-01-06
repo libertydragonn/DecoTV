@@ -11,6 +11,26 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '1.1.0',
+    date: '2026-01-01',
+    added: [
+      '🎨 移动端悬浮导航: 全新 iOS 风格磨砂胶囊导航栏，支持动态主题色与横向滚动',
+      '🌈 极光流体背景: PC 端 CSS 极光动画取代 Canvas 粒子；移动端静态 Lite 版零功耗',
+      '🔀 数据源筛选器: 重构为"单行横滑 + 模态框"模式，节省空间',
+    ],
+    changed: [
+      '⚡ 主线程释放: 移除 JS 粒子计算，解决 PC 端导航栏点击卡顿问题',
+      '🚀 交互优化: 禁用导航栏预加载，提升点击响应速度',
+      '📜 滚动优化: 移除 Snap 效果，修复分类栏"回弹死锁"与"点击穿透"',
+      '🎨 UI 细节适配: 移动端导航栏亮/暗色模式自适应',
+    ],
+    fixed: [
+      '🔐 Docker 鉴权: 修复未配置 AUTH_SECRET 导致后台 401 错误',
+      '🖼️ 豆瓣爬虫: 修复部分演员头像缺失，增加默认头像与高清图替换',
+      '🏗️ 构建修复: 修复 MobileBottomNav 类型错误导致 GitHub Actions 失败',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2025-12-28',
     added: [

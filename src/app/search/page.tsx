@@ -50,9 +50,9 @@ function SearchPageClient() {
   const flushTimerRef = useRef<number | null>(null);
   const [useFluidSearch, setUseFluidSearch] = useState(true);
   // 聚合卡片 refs 与聚合统计缓存
-  const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle | null>>>(
-    new Map()
-  );
+  const groupRefs = useRef<
+    Map<string, React.RefObject<VideoCardHandle | null>>
+  >(new Map());
   const groupStatsRef = useRef<
     Map<
       string,
@@ -87,7 +87,7 @@ function SearchPageClient() {
       return res;
     })();
     const source_names = Array.from(
-      new Set(group.map((g) => g.source_name).filter(Boolean))
+      new Set(group.map((g) => g.source_name).filter(Boolean)),
     ) as string[];
 
     const douban_id = (() => {
@@ -174,7 +174,7 @@ function SearchPageClient() {
   const compareYear = (
     aYear: string,
     bYear: string,
-    order: 'none' | 'asc' | 'desc'
+    order: 'none' | 'asc' | 'desc',
   ) => {
     // 如果是无排序状态，返回0（保持原顺序）
     if (order === 'none') return 0;
@@ -272,7 +272,7 @@ function SearchPageClient() {
 
     // 按出现顺序返回聚合结果
     return keyOrder.map(
-      (key) => [key, map.get(key)!] as [string, SearchResult[]]
+      (key) => [key, map.get(key)!] as [string, SearchResult[]],
     );
   }, [searchResults]);
 
@@ -460,7 +460,7 @@ function SearchPageClient() {
       'searchHistoryUpdated',
       (newHistory: string[]) => {
         setSearchHistory(newHistory);
-      }
+      },
     );
 
     // 获取滚动位置的函数 - 专门针对 body 滚动
@@ -551,7 +551,7 @@ function SearchPageClient() {
       if (currentFluidSearch) {
         // 流式搜索：打开新的流式连接
         const es = new EventSource(
-          `/api/search/ws?q=${encodeURIComponent(trimmed)}`
+          `/api/search/ws?q=${encodeURIComponent(trimmed)}`,
         );
         eventSourceRef.current = es;
 
@@ -749,7 +749,7 @@ function SearchPageClient() {
         top: 0,
         behavior: 'smooth',
       });
-    } catch (error) {
+    } catch {
       // 如果平滑滚动完全失败，使用立即滚动
       document.body.scrollTop = 0;
     }
@@ -975,7 +975,7 @@ function SearchPageClient() {
                       onClick={() => {
                         setSearchQuery(item);
                         router.push(
-                          `/search?q=${encodeURIComponent(item.trim())}`
+                          `/search?q=${encodeURIComponent(item.trim())}`,
                         );
                       }}
                       className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'

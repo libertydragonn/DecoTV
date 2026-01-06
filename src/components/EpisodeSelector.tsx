@@ -67,10 +67,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
   // 存储每个源的视频信息
   const [videoInfoMap, setVideoInfoMap] = useState<Map<string, VideoInfo>>(
-    new Map()
+    new Map(),
   );
   const [attemptedSources, setAttemptedSources] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // 使用 ref 来避免闭包问题
@@ -89,7 +89,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   // 主要的 tab 状态：'episodes' 或 'sources'
   // 当只有一集时默认展示 "换源"，并隐藏 "选集" 标签
   const [activeTab, setActiveTab] = useState<'episodes' | 'sources'>(
-    totalEpisodes > 1 ? 'episodes' : 'sources'
+    totalEpisodes > 1 ? 'episodes' : 'sources',
   );
 
   // 当前分页索引（0 开始）
@@ -129,7 +129,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     try {
       const info = await getVideoResolutionFromM3u8(episodeUrl);
       setVideoInfoMap((prev) => new Map(prev).set(sourceKey, info));
-    } catch (error) {
+    } catch {
       // 失败时保存错误状态
       setVideoInfoMap((prev) =>
         new Map(prev).set(sourceKey, {
@@ -137,7 +137,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           loadSpeed: '未知',
           pingTime: 0,
           hasError: true,
-        })
+        }),
       );
     }
   }, []);
@@ -245,27 +245,33 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   const [isCategoryHovered, setIsCategoryHovered] = useState(false);
 
   // 阻止页面竖向滚动
-  const preventPageScroll = useCallback((e: WheelEvent) => {
-    if (isCategoryHovered) {
-      e.preventDefault();
-    }
-  }, [isCategoryHovered]);
+  const preventPageScroll = useCallback(
+    (e: WheelEvent) => {
+      if (isCategoryHovered) {
+        e.preventDefault();
+      }
+    },
+    [isCategoryHovered],
+  );
 
   // 处理滚轮事件，实现横向滚动
-  const handleWheel = useCallback((e: WheelEvent) => {
-    if (isCategoryHovered && categoryContainerRef.current) {
-      e.preventDefault(); // 阻止默认的竖向滚动
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      if (isCategoryHovered && categoryContainerRef.current) {
+        e.preventDefault(); // 阻止默认的竖向滚动
 
-      const container = categoryContainerRef.current;
-      const scrollAmount = e.deltaY * 2; // 调整滚动速度
+        const container = categoryContainerRef.current;
+        const scrollAmount = e.deltaY * 2; // 调整滚动速度
 
-      // 根据滚轮方向进行横向滚动
-      container.scrollBy({
-        left: scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  }, [isCategoryHovered]);
+        // 根据滚轮方向进行横向滚动
+        container.scrollBy({
+          left: scrollAmount,
+          behavior: 'smooth',
+        });
+      }
+    },
+    [isCategoryHovered],
+  );
 
   // 添加全局wheel事件监听器
   useEffect(() => {
@@ -325,27 +331,27 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         setCurrentPage(index);
       }
     },
-    [descending, pageCount]
+    [descending, pageCount],
   );
 
   const handleEpisodeClick = useCallback(
     (episodeNumber: number) => {
       onChange?.(episodeNumber);
     },
-    [onChange]
+    [onChange],
   );
 
   const handleSourceClick = useCallback(
     (source: SearchResult) => {
       onSourceChange?.(source.source, source.id, source.title);
     },
-    [onSourceChange]
+    [onSourceChange],
   );
 
   const currentStart = currentPage * episodesPerPage + 1;
   const currentEnd = Math.min(
     currentStart + episodesPerPage - 1,
-    totalEpisodes
+    totalEpisodes,
   );
 
   return (
@@ -356,9 +362,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           <div
             onClick={() => setActiveTab('episodes')}
             className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
-              ${activeTab === 'episodes'
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+              ${
+                activeTab === 'episodes'
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
               }
             `.trim()}
           >
@@ -368,9 +375,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         <div
           onClick={handleSourceTabClick}
           className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
-            ${activeTab === 'sources'
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+            ${
+              activeTab === 'sources'
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
             }
           `.trim()}
         >
@@ -400,9 +408,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       }}
                       onClick={() => handleCategoryClick(idx)}
                       className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 text-center 
-                        ${isActive
-                          ? 'text-green-500 dark:text-green-400'
-                          : 'text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'
+                        ${
+                          isActive
+                            ? 'text-green-500 dark:text-green-400'
+                            : 'text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'
                         }
                       `.trim()}
                     >
@@ -444,7 +453,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
-                descending ? currentEnd - i : currentStart + i
+                descending ? currentEnd - i : currentStart + i,
               );
               return episodes;
             })().map((episodeNumber) => {
@@ -454,9 +463,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                   key={episodeNumber}
                   onClick={() => handleEpisodeClick(episodeNumber - 1)}
                   className={`h-10 min-w-10 px-3 py-2 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap font-mono
-                    ${isActive
-                      ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+                    ${
+                      isActive
+                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
                     }`.trim()}
                 >
                   {(() => {
@@ -541,10 +551,11 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                           !isCurrentSource && handleSourceClick(source)
                         }
                         className={`flex items-start gap-3 px-2 py-3 rounded-lg transition-all select-none duration-200 relative
-                      ${isCurrentSource
-                            ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
-                            : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
-                          }`.trim()}
+                      ${
+                        isCurrentSource
+                          ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
+                          : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
+                      }`.trim()}
                       >
                         {/* 封面 */}
                         <div className='shrink-0 w-12 h-20 bg-gray-300 dark:bg-gray-600 rounded overflow-hidden'>
@@ -591,10 +602,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                 } else {
                                   // 根据分辨率设置不同颜色：2K、4K为紫色，1080p、720p为绿色，其他为黄色
                                   const isUltraHigh = ['4K', '2K'].includes(
-                                    videoInfo.quality
+                                    videoInfo.quality,
                                   );
                                   const isHigh = ['1080p', '720p'].includes(
-                                    videoInfo.quality
+                                    videoInfo.quality,
                                   );
                                   const textColorClasses = isUltraHigh
                                     ? 'text-purple-600 dark:text-purple-400'
@@ -664,7 +675,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     onClick={() => {
                       if (videoTitle) {
                         router.push(
-                          `/search?q=${encodeURIComponent(videoTitle)}`
+                          `/search?q=${encodeURIComponent(videoTitle)}`,
                         );
                       }
                     }}

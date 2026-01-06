@@ -33,7 +33,7 @@ async function searchWithCache(
   query: string,
   page: number,
   url: string,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<{ results: SearchResult[]; pageCount?: number }> {
   // 先查缓存
   const cached = getCachedSearchPage(apiSite.key, query, page);
@@ -126,7 +126,7 @@ async function searchWithCache(
 
     // 过滤掉集数为 0 的结果
     const results = allResults.filter(
-      (result: SearchResult) => result.episodes.length > 0
+      (result: SearchResult) => result.episodes.length > 0,
     );
 
     const pageCount = page === 1 ? data.pagecount || 1 : undefined;
@@ -149,7 +149,7 @@ async function searchWithCache(
 
 export async function searchFromApi(
   apiSite: ApiSite,
-  query: string
+  query: string,
 ): Promise<SearchResult[]> {
   try {
     const apiBaseUrl = apiSite.api;
@@ -162,7 +162,7 @@ export async function searchFromApi(
       query,
       1,
       apiUrl,
-      5000
+      5000,
     );
     const results = firstPageResult.results;
     const pageCountFromFirst = firstPageResult.pageCount;
@@ -193,7 +193,7 @@ export async function searchFromApi(
             query,
             page,
             pageUrl,
-            5000
+            5000,
           );
           return pageResult.results;
         })();
@@ -213,7 +213,7 @@ export async function searchFromApi(
     }
 
     return results;
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -223,7 +223,7 @@ const M3U8_PATTERN = /(https?:\/\/[^"'\s]+?\.m3u8[^\s"']*)/gi;
 
 export async function getDetailFromApi(
   apiSite: ApiSite,
-  id: string
+  id: string,
 ): Promise<SearchResult> {
   if (apiSite.detail) {
     return handleSpecialSourceDetail(id, apiSite);
@@ -312,7 +312,7 @@ export async function getDetailFromApi(
 
 async function handleSpecialSourceDetail(
   id: string,
-  apiSite: ApiSite
+  apiSite: ApiSite,
 ): Promise<SearchResult> {
   const detailUrl = `${apiSite.detail}/index.php/vod/detail/id/${id}.html`;
 
@@ -353,7 +353,7 @@ async function handleSpecialSourceDetail(
 
   // 根据 matches 数量生成剧集标题
   const episodes_titles = Array.from({ length: matches.length }, (_, i) =>
-    (i + 1).toString()
+    (i + 1).toString(),
   );
 
   // 提取标题
@@ -362,7 +362,7 @@ async function handleSpecialSourceDetail(
 
   // 提取描述
   const descMatch = html.match(
-    /<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/
+    /<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/,
   );
   const descText = descMatch ? cleanHtmlTags(descMatch[1]) : '';
 

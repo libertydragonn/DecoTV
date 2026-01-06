@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
           'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
           'Netlify-Vary': 'query',
         },
-      }
+      },
     );
   }
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
   const shouldFilterAdult = resolveAdultFilter(
     searchParams,
-    config.SiteConfig.DisableYellowFilter
+    config.SiteConfig.DisableYellowFilter,
   );
 
   if (shouldFilterAdult) {
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type, Cookie',
             'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled',
           },
-        }
+        },
       );
     }
 
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type, Cookie',
             'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled',
           },
-        }
+        },
       );
     } else {
       return NextResponse.json(
@@ -111,10 +111,10 @@ export async function GET(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type, Cookie',
             'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled',
           },
-        }
+        },
       );
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         error: '搜索失败',
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
           'Access-Control-Allow-Headers': 'Content-Type, Cookie',
           'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled',
         },
-      }
+      },
     );
   }
 }

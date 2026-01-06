@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (storageType === 'localstorage') {
       return NextResponse.json(
         { error: '不支持本地存储进行数据迁移' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,7 +32,10 @@ export async function POST(req: NextRequest) {
 
     // 检查用户权限（只有站长可以导入数据）
     if (authInfo.username !== process.env.USERNAME) {
-      return NextResponse.json({ error: '权限不足，只有站长可以导入数据' }, { status: 401 });
+      return NextResponse.json(
+        { error: '权限不足，只有站长可以导入数据' },
+        { status: 401 },
+      );
     }
 
     // 解析表单数据
@@ -55,8 +58,11 @@ export async function POST(req: NextRequest) {
     let decryptedData: string;
     try {
       decryptedData = SimpleCrypto.decrypt(encryptedData, password);
-    } catch (error) {
-      return NextResponse.json({ error: '解密失败，请检查密码是否正确' }, { status: 400 });
+    } catch {
+      return NextResponse.json(
+        { error: '解密失败，请检查密码是否正确' },
+        { status: 400 },
+      );
     }
 
     // 解压缩数据
@@ -68,12 +74,16 @@ export async function POST(req: NextRequest) {
     let importData: any;
     try {
       importData = JSON.parse(decompressedData);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: '备份文件格式错误' }, { status: 400 });
     }
 
     // 验证数据格式
-    if (!importData.data || !importData.data.adminConfig || !importData.data.userData) {
+    if (
+      !importData.data ||
+      !importData.data.adminConfig ||
+      !importData.data.userData
+    ) {
       return NextResponse.json({ error: '备份文件格式无效' }, { status: 400 });
     }
 
@@ -111,7 +121,8 @@ export async function POST(req: NextRequest) {
 
       // 导入搜索历史
       if (user.searchHistory && Array.isArray(user.searchHistory)) {
-        for (const keyword of user.searchHistory.reverse()) { // 反转以保持顺序
+        for (const keyword of user.searchHistory.reverse()) {
+          // 反转以保持顺序
           await db.addSearchHistory(username, keyword);
         }
       }
@@ -131,14 +142,16 @@ export async function POST(req: NextRequest) {
       message: '数据导入成功',
       importedUsers: Object.keys(userData).length,
       timestamp: importData.timestamp,
-      serverVersion: typeof importData.serverVersion === 'string' ? importData.serverVersion : '未知版本'
+      serverVersion:
+        typeof importData.serverVersion === 'string'
+          ? importData.serverVersion
+          : '未知版本',
     });
-
   } catch (error) {
     console.error('数据导入失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '导入失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

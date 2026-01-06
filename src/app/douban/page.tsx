@@ -12,6 +12,7 @@ import {
   getDoubanRecommends,
 } from '@/lib/douban.client';
 import { DoubanItem, DoubanResult } from '@/lib/types';
+import { generateCacheKey, globalCache } from '@/lib/unified-cache';
 import { useSourceFilter } from '@/hooks/useSourceFilter';
 
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
@@ -269,7 +270,7 @@ function DoubanPageClient() {
     [type, primarySelection, secondarySelection],
   );
 
-  // 防抖的数据加载函数
+  // 防抖的数据加载函数 - 缓存优先
   const loadInitialData = useCallback(async () => {
     // 创建当前参数的快照
     const requestSnapshot = {
@@ -280,6 +281,25 @@ function DoubanPageClient() {
       selectedWeekday,
       currentPage: 0,
     };
+
+    // 【缓存优先】生成缓存键
+    const cacheKey = generateCacheKey('douban', {
+      type,
+      primary: primarySelection,
+      secondary: secondarySelection,
+      weekday: type === 'anime' ? selectedWeekday : '',
+      ...multiLevelValues,
+    });
+
+    // 尝试从缓存读取
+    const cachedData = globalCache.get<DoubanItem[]>(cacheKey);
+    if (cachedData && cachedData.length > 0) {
+      console.log(`[DoubanPage] 缓存命中: ${cacheKey}`);
+      setDoubanData(cachedData);
+      setLoading(false);
+      setHasMore(cachedData.length >= 25);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -389,6 +409,12 @@ function DoubanPageClient() {
           setDoubanData(data.list);
           setHasMore(data.list.length !== 0);
           setLoading(false);
+
+          // 【缓存写入】保存到缓存，下次瞬间加载
+          if (data.list.length > 0) {
+            globalCache.set(cacheKey, data.list, 3600); // 1小时缓存
+            console.log(`[DoubanPage] 缓存写入: ${cacheKey}`);
+          }
         } else {
           console.log('参数不一致，不执行任何操作，避免设置过期数据');
         }
@@ -1035,8 +1061,14 @@ function DoubanPageClient() {
 
         {/* 内容展示区域 */}
         <div className='max-w-[95%] mx-auto mt-8 overflow-visible'>
-          {/* 内容网格 */}
-          <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
+          {/* 内容网格 - 使用 content-visibility 优化渲染性能 */}
+          <div
+            className='justify-start grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'
+            style={{
+              contentVisibility: 'auto',
+              containIntrinsicSize: '0 500px',
+            }}
+          >
             {loading || isLoadingSourceData || !selectorsReady ? (
               // 显示骨架屏
               skeletonData.map((index) => <DoubanCardSkeleton key={index} />)

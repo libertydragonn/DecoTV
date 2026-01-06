@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
           'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
           'Netlify-Vary': 'query',
         },
-      }
+      },
     );
   }
 
@@ -80,13 +80,13 @@ export async function GET(request: NextRequest) {
       Promise.race([
         searchFromApi(site, q),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
+          setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000),
         ),
       ]).catch((err) => {
         console.warn(`搜索失败 ${site.name} (query: ${q}):`, err.message);
         return []; // 返回空数组而不是抛出错误
-      })
-    )
+      }),
+    ),
   );
 
   try {
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     // 🎯 智能排序：按相关性对搜索结果排序（使用规范化关键词）
     flattenedResults = rankSearchResults(
       flattenedResults,
-      normalizedQuery || query
+      normalizedQuery || query,
     );
 
     const cacheTime = await getCacheTime();
@@ -148,9 +148,9 @@ export async function GET(request: NextRequest) {
           'Netlify-Vary': 'query',
           'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled', // 调试信息
         },
-      }
+      },
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: '搜索失败' }, { status: 500 });
   }
 }

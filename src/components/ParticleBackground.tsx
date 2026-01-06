@@ -1,212 +1,70 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
 
-import { usePathname } from 'next/navigation';
-import React, { useEffect, useMemo, useRef } from 'react';
-
+/**
+ * 极光流体背景组件 (Aurora Lite - 全平台统一版)
+ *
+ * 设计理念：
+ * - 全平台统一使用轻量级 Lite 方案，仅 2 个光斑元素
+ * - 纯 CSS 实现，零 JS 主线程阻塞
+ * - 响应式尺寸：移动端小光斑，PC 端自动放大
+ * - 超低功耗：长周期动画 (10s/12s)，适度模糊
+ * - GPU 加速：transform3d + will-change
+ */
 export default function ParticleBackground() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const pathname = usePathname();
-  const lastFrameTime = useRef<number>(0);
-  const FPS_LIMIT = 30; // 限制帧率到 30fps，降低 CPU 占用
+  return (
+    <div className='fixed inset-0 z-[-1] overflow-hidden'>
+      {/* 1. 基础底色 - 深邃黑渐变 (暗色模式) */}
+      <div className='absolute inset-0 bg-linear-to-b from-neutral-950 via-slate-950 to-black dark:from-neutral-950 dark:via-slate-950 dark:to-black' />
 
-  // 使用 useMemo 缓存主题配置，避免每帧重新计算
-  const themeConfig = useMemo(() => {
-    if (pathname.startsWith('/search')) return { hue: 240, saturation: 85 };
-    if (pathname.startsWith('/douban') && typeof window !== 'undefined') {
-      const type = new URLSearchParams(window.location.search).get('type');
-      if (type === 'movie') return { hue: 330, saturation: 80 };
-      if (type === 'tv') return { hue: 270, saturation: 85 };
-      if (type === 'anime') return { hue: 170, saturation: 75 };
-      if (type === 'show') return { hue: 50, saturation: 90 };
-    }
-    if (pathname.startsWith('/live')) return { hue: 330, saturation: 85 };
-    return { hue: 200, saturation: 80 };
-  }, [pathname]);
+      {/* 亮色模式底色 */}
+      <div className='absolute inset-0 bg-linear-to-b from-slate-100 via-gray-50 to-white dark:opacity-0 transition-opacity duration-500' />
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      {/* ========== 统一极光层 (Lite - 全平台通用) ========== */}
+      {/* 紫色光斑 - 左上角，响应式尺寸 */}
+      <div
+        className='absolute -top-16 -left-16 w-64 h-64 md:w-[40vw] md:h-[40vw] md:max-w-125 md:max-h-125 rounded-full mix-blend-screen filter blur-[50px] md:blur-[80px] animate-blob-slow transform-gpu will-change-transform'
+        style={{
+          background:
+            'radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 70%)',
+          transform: 'translate3d(0,0,0)',
+        }}
+      />
 
-    const ctx = canvas.getContext('2d', {
-      alpha: true,
-      desynchronized: true, // 性能优化：允许异步渲染
-    });
-    if (!ctx) return;
+      {/* 青蓝光斑 - 右下角，响应式尺寸 */}
+      <div
+        className='absolute bottom-20 -right-16 md:bottom-0 md:-right-20 w-56 h-56 md:w-[35vw] md:h-[35vw] md:max-w-md md:max-h-md rounded-full mix-blend-screen filter blur-[45px] md:blur-[70px] animate-blob-slow transform-gpu will-change-transform'
+        style={{
+          background:
+            'radial-gradient(circle, rgba(34,211,238,0.18) 0%, transparent 70%)',
+          transform: 'translate3d(0,0,0)',
+          animationDelay: '5s',
+        }}
+      />
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+      {/* 3. 噪点纹理层 - 增加质感 */}
+      <div
+        className='absolute inset-0 opacity-[0.025] dark:opacity-[0.04] pointer-events-none'
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        }}
+      />
 
-    const onResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', onResize);
-
-    // 大幅减少粒子数量：最多 40 个（原来 120 个），降低 66% CPU 负担
-    const P = Math.min(40, Math.floor((width * height) / 40000));
-    const particles: {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      r: number;
-      hue: number;
-      alpha: number;
-      fadeDirection: number;
-    }[] = [];
-
-    for (let i = 0; i < P; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.4, // 降低速度（原来 0.6）
-        vy: (Math.random() - 0.5) * 0.4,
-        r: Math.random() * 2 + 1,
-        hue: themeConfig.hue + (Math.random() - 0.5) * 60, // 围绕主题色变化
-        alpha: Math.random() * 0.5 + 0.3,
-        fadeDirection: Math.random() > 0.5 ? 1 : -1,
-      });
-    }
-
-    const draw = (currentTime: number) => {
-      // 限制帧率到 30fps，降低 50% CPU 占用
-      const elapsed = currentTime - lastFrameTime.current;
-      if (elapsed < 1000 / FPS_LIMIT) {
-        rafRef.current = requestAnimationFrame(draw);
-        return;
-      }
-      lastFrameTime.current = currentTime;
-
-      // 每一帧都检测当前主题模式，确保实时响应
-      const isDarkMode =
-        typeof window !== 'undefined' &&
-        document.documentElement.classList.contains('dark');
-
-      // 获取主题渐变色 - 根据亮暗模式调整
-      const theme = (() => {
-        const h = themeConfig.hue;
-        const s = themeConfig.saturation;
-
-        if (isDarkMode) {
-          // 暗色模式：深色背景
-          return {
-            a: `hsla(${h}, ${s}%, 60%, 0.09)`,
-            b: `hsla(${(h + 40) % 360}, ${s - 10}%, 55%, 0.08)`,
-            clearColor: 'rgba(0, 0, 0, 0.05)',
-          };
-        } else {
-          // 亮色模式：浅色背景，更高亮度
-          return {
-            a: `hsla(${h}, ${s - 30}%, 95%, 0.4)`,
-            b: `hsla(${(h + 40) % 360}, ${s - 35}%, 92%, 0.35)`,
-            clearColor: 'rgba(255, 255, 255, 0.1)',
-          };
-        }
-      })();
-
-      // 使用半透明清除创建拖尾效果 - 根据主题调整
-      ctx.fillStyle = theme.clearColor;
-      ctx.fillRect(0, 0, width, height);
-
-      // 静态渐变背景
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, theme.a);
-      gradient.addColorStop(1, theme.b);
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-      ctx.globalCompositeOperation = 'source-over';
-
-      // 更新和绘制粒子
-      for (const p of particles) {
-        // 更新位置
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // 边界反弹
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
-
-        // 呼吸效果 - 透明度渐变
-        p.alpha += p.fadeDirection * 0.005;
-        if (p.alpha > 0.8) {
-          p.alpha = 0.8;
-          p.fadeDirection = -1;
-        } else if (p.alpha < 0.2) {
-          p.alpha = 0.2;
-          p.fadeDirection = 1;
-        }
-
-        // 绘制粒子 - 亮色模式使用更深的颜色
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.closePath();
-        const particleColor = isDarkMode
-          ? `hsla(${p.hue}, 85%, 65%, ${p.alpha})` // 暗色模式：高亮度
-          : `hsla(${p.hue}, 70%, 50%, ${p.alpha * 0.6})`; // 亮色模式：中等亮度 + 降低透明度
-        const shadowColor = isDarkMode
-          ? `hsla(${p.hue}, 90%, 70%, ${p.alpha * 0.8})`
-          : `hsla(${p.hue}, 60%, 45%, ${p.alpha * 0.3})`;
-        ctx.fillStyle = particleColor;
-        ctx.shadowColor = shadowColor;
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-
-      // 优化的连接线 - 每个粒子最多 3 条连接，降低复杂度从 O(n²) 到 O(n)
-      ctx.lineWidth = 0.5;
-      const maxConnections = 3;
-      const maxDist = 100; // 减少连接距离（原来 120）
-
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-        let connections = 0;
-
-        for (
-          let j = i + 1;
-          j < particles.length && connections < maxConnections;
-          j++
-        ) {
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const d2 = dx * dx + dy * dy;
-
-          if (d2 < maxDist * maxDist) {
-            const alpha = (1 - d2 / (maxDist * maxDist)) * 0.2;
-            const lineColor = isDarkMode
-              ? `hsla(${themeConfig.hue}, 70%, 60%, ${alpha})` // 暗色模式
-              : `hsla(${themeConfig.hue}, 50%, 40%, ${alpha * 0.5})`; // 亮色模式：更深 + 降低透明度
-            ctx.strokeStyle = lineColor;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-            connections++;
+      {/* 内联 Keyframes 定义 - 超长周期，极低功耗 */}
+      <style jsx>{`
+        @keyframes blob-slow {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(15px, -25px, 0) scale(1.05);
           }
         }
-      }
 
-      rafRef.current = requestAnimationFrame(draw);
-    };
-
-    rafRef.current = requestAnimationFrame(draw);
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [pathname, themeConfig, FPS_LIMIT, lastFrameTime]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden='true'
-      className='fixed inset-0 -z-10 h-full w-full opacity-30 dark:opacity-60'
-    />
+        .animate-blob-slow {
+          animation: blob-slow 12s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
   );
 }

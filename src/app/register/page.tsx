@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
 
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
@@ -27,7 +25,7 @@ function VersionDisplay() {
       try {
         const status = await checkForUpdates();
         setUpdateStatus(status);
-      } catch (_) {
+      } catch {
         // do nothing
       } finally {
         setIsChecking(false);
@@ -45,7 +43,7 @@ function VersionDisplay() {
             (process.env.NEXT_PUBLIC_UPDATE_REPO
               ? `https://github.com/${process.env.NEXT_PUBLIC_UPDATE_REPO}`
               : '#'),
-          '_blank'
+          '_blank',
         )
       }
       className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
@@ -57,8 +55,8 @@ function VersionDisplay() {
             updateStatus?.status === UpdateStatus.HAS_UPDATE
               ? 'text-yellow-600 dark:text-yellow-400'
               : updateStatus?.status === UpdateStatus.NO_UPDATE
-              ? 'text-purple-500 dark:text-purple-400'
-              : ''
+                ? 'text-purple-500 dark:text-purple-400'
+                : ''
           }`}
         >
           {updateStatus?.status === UpdateStatus.HAS_UPDATE && (
@@ -109,7 +107,7 @@ function RegisterPageClient() {
       } else {
         setError('加载验证码失败');
       }
-    } catch (err) {
+    } catch {
       setError('网络错误，请稍后重试');
     } finally {
       setCaptchaLoading(false);
@@ -136,7 +134,6 @@ function RegisterPageClient() {
         setRegistrationEnabled(false);
         setStorageType('localstorage');
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 用户名验证提示
@@ -225,7 +222,7 @@ function RegisterPageClient() {
           loadCaptcha();
         }
       }
-    } catch (err) {
+    } catch {
       setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);
@@ -236,11 +233,11 @@ function RegisterPageClient() {
   if (!registrationEnabled) {
     return (
       <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden login-bg'>
-        <div className='absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
+        <div className='absolute inset-0 bg-linear-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
         <div className='absolute top-4 right-4 z-20'>
           <ThemeToggle />
         </div>
-        <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 text-center'>
+        <div className='relative z-10 w-full max-w-md rounded-3xl bg-linear-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 text-center'>
           <AlertCircle className='w-16 h-16 mx-auto mb-4 text-yellow-500' />
           <h2 className='text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100'>
             注册功能未开启
@@ -250,7 +247,7 @@ function RegisterPageClient() {
           </p>
           <Link
             href='/login'
-            className='inline-block px-6 py-3 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white rounded-lg font-semibold hover:brightness-110 transition-all'
+            className='inline-block px-6 py-3 bg-linear-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white rounded-lg font-semibold hover:brightness-110 transition-all'
           >
             返回登录
           </Link>
@@ -264,11 +261,11 @@ function RegisterPageClient() {
   if (storageType === 'localstorage') {
     return (
       <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden login-bg'>
-        <div className='absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
+        <div className='absolute inset-0 bg-linear-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
         <div className='absolute top-4 right-4 z-20'>
           <ThemeToggle />
         </div>
-        <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 text-center'>
+        <div className='relative z-10 w-full max-w-md rounded-3xl bg-linear-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 text-center'>
           <AlertCircle className='w-16 h-16 mx-auto mb-4 text-red-500' />
           <h2 className='text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100'>
             不支持用户注册
@@ -280,7 +277,7 @@ function RegisterPageClient() {
           </p>
           <Link
             href='/login'
-            className='inline-block px-6 py-3 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white rounded-lg font-semibold hover:brightness-110 transition-all'
+            className='inline-block px-6 py-3 bg-linear-to-r from-purple-600 via-fuchsia-600 to-pink-600 text-white rounded-lg font-semibold hover:brightness-110 transition-all'
           >
             返回登录
           </Link>
@@ -293,7 +290,7 @@ function RegisterPageClient() {
   return (
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden login-bg'>
       {/* Animated background gradient */}
-      <div className='absolute inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
+      <div className='absolute inset-0 bg-linear-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 dark:from-purple-900/40 dark:via-blue-900/40 dark:to-pink-900/40 animate-gradient-shift'></div>
 
       {/* Floating orbs */}
       <div className='absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/30 rounded-full blur-xl animate-float-slow'></div>
@@ -304,7 +301,7 @@ function RegisterPageClient() {
         <ThemeToggle />
       </div>
 
-      <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-6 sm:p-10 dark:border dark:border-zinc-800 login-card'>
+      <div className='relative z-10 w-full max-w-md rounded-3xl bg-linear-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-6 sm:p-10 dark:border dark:border-zinc-800 login-card'>
         <div className='text-center mb-6'>
           <h1 className='tracking-tight text-3xl sm:text-4xl font-extrabold mb-2 bg-clip-text neon-text neon-flicker'>
             {siteName}
@@ -407,12 +404,12 @@ function RegisterPageClient() {
               {/* 验证码图片 */}
               <div className='relative shrink-0'>
                 {captchaLoading ? (
-                  <div className='w-[100px] sm:w-[120px] h-full min-h-[46px] bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center justify-center'>
+                  <div className='w-25 sm:w-30 h-full min-h-11.5 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center justify-center'>
                     <RefreshCw className='w-5 h-5 animate-spin text-gray-400' />
                   </div>
                 ) : (
                   <div
-                    className='w-[100px] sm:w-[120px] h-full min-h-[46px] rounded-2xl overflow-hidden cursor-pointer hover:opacity-80 transition-opacity bg-white/50 dark:bg-zinc-800/50 flex items-center justify-center'
+                    className='w-25 sm:w-30 h-full min-h-11.5 rounded-2xl overflow-hidden cursor-pointer hover:opacity-80 transition-opacity bg-white/50 dark:bg-zinc-800/50 flex items-center justify-center'
                     onClick={loadCaptcha}
                     dangerouslySetInnerHTML={{ __html: captchaSvg }}
                   />
@@ -452,7 +449,7 @@ function RegisterPageClient() {
               !!getPasswordError() ||
               !!getConfirmPasswordError()
             }
-            className='inline-flex w-full justify-center rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-300 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 neon-pulse login-button'
+            className='inline-flex w-full justify-center rounded-2xl bg-linear-to-r from-purple-600 via-fuchsia-600 to-pink-600 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-300 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 neon-pulse login-button'
           >
             {loading ? '注册中...' : '立即注册'}
           </button>

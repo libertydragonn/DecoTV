@@ -34,7 +34,7 @@ function normalizeImageUrl(url?: string): string | undefined {
  * 规范化 Bangumi 数据，确保图片链接使用 HTTPS
  */
 function normalizeBangumiData(
-  data: BangumiCalendarData[]
+  data: BangumiCalendarData[],
 ): BangumiCalendarData[] {
   return data.map((day) => ({
     ...day,
@@ -63,7 +63,7 @@ export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {
     // 确保返回的数据是数组格式，并规范化图片链接
     const calendarData = Array.isArray(data) ? data : [];
     return normalizeBangumiData(calendarData);
-  } catch (error) {
+  } catch {
     return [];
   }
 }

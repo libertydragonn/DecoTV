@@ -10,6 +10,10 @@
  * 2. 如果 API 失败，回退到客户端直接获取
  *
  * 时间戳格式: YYYYMMDDHHMMSS (14位数字)
+ *
+ * 性能优化：
+ * - 使用单例模式，App 生命周期内只执行一次版本检测
+ * - 结果缓存到 sessionStorage，避免重复请求
  */
 
 // 版本检查结果枚举
@@ -41,6 +45,17 @@ const REMOTE_VERSION_URLS = [
 const API_TIMEOUT = 5000; // API 超时 5 秒
 const FETCH_TIMEOUT = 6000; // 远程获取超时 6 秒
 
+// ============ 单例缓存机制 ============
+const CACHE_KEY = 'decotv_version_check_result';
+const CACHE_TTL = 5 * 60 * 1000; // 缓存 5 分钟
+
+// 内存缓存：避免同一页面多次调用
+let memoryCache: { result: VersionCheckResult; timestamp: number } | null =
+  null;
+
+// 正在进行的请求 Promise，防止并发重复请求
+let pendingRequest: Promise<VersionCheckResult> | null = null;
+
 export interface VersionCheckResult {
   status: UpdateStatus;
   localTimestamp?: string;
@@ -48,6 +63,51 @@ export interface VersionCheckResult {
   formattedLocalTime?: string;
   formattedRemoteTime?: string;
   error?: string;
+}
+
+/**
+ * 从 sessionStorage 获取缓存结果
+ */
+function getCachedResult(): VersionCheckResult | null {
+  if (typeof window === 'undefined') return null;
+
+  // 优先检查内存缓存
+  if (memoryCache && Date.now() - memoryCache.timestamp < CACHE_TTL) {
+    return memoryCache.result;
+  }
+
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const { result, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp < CACHE_TTL) {
+      // 同步到内存缓存
+      memoryCache = { result, timestamp };
+      return result;
+    }
+    // 缓存过期，清除
+    sessionStorage.removeItem(CACHE_KEY);
+  } catch {
+    // 忽略解析错误
+  }
+  return null;
+}
+
+/**
+ * 缓存检测结果到 sessionStorage
+ */
+function setCachedResult(result: VersionCheckResult): void {
+  if (typeof window === 'undefined') return;
+
+  const timestamp = Date.now();
+  memoryCache = { result, timestamp };
+
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ result, timestamp }));
+  } catch {
+    // 忽略存储错误
+  }
 }
 
 /**
@@ -92,7 +152,7 @@ function compareTimestamps(local: string, remote: string): number {
  */
 async function fetchWithTimeout(
   url: string,
-  timeout: number
+  timeout: number,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -119,7 +179,7 @@ async function checkViaApi(): Promise<VersionCheckResult | null> {
   try {
     const response = await fetchWithTimeout(
       `/api/version/check?_t=${Date.now()}`,
-      API_TIMEOUT
+      API_TIMEOUT,
     );
 
     if (!response.ok) {
@@ -276,18 +336,47 @@ async function checkViaClientDirect(): Promise<VersionCheckResult> {
 /**
  * 检查版本更新 - 主入口函数
  * 使用混合策略：优先 API，回退客户端直接获取
+ *
+ * 性能优化：
+ * - 单例模式，结果缓存 5 分钟
+ * - 防止并发重复请求
  */
 export async function checkForUpdates(): Promise<VersionCheckResult> {
-  // 策略1: 优先尝试 API（同源请求，最稳定）
-  const apiResult = await checkViaApi();
-  if (apiResult) {
-    console.log('版本检测成功 (via API):', apiResult.status);
-    return apiResult;
+  // 1. 优先返回缓存结果，避免重复请求
+  const cached = getCachedResult();
+  if (cached) {
+    console.log('版本检测 (缓存命中):', cached.status);
+    return cached;
   }
 
-  // 策略2: API 失败，回退到客户端直接获取
-  console.log('API 检测失败，尝试客户端直接获取...');
-  const clientResult = await checkViaClientDirect();
-  console.log('版本检测结果 (via Client):', clientResult.status);
-  return clientResult;
+  // 2. 如果有正在进行的请求，复用它（防止并发）
+  if (pendingRequest) {
+    console.log('版本检测 (复用进行中的请求)');
+    return pendingRequest;
+  }
+
+  // 3. 发起新请求
+  pendingRequest = (async () => {
+    try {
+      // 策略1: 优先尝试 API（同源请求，最稳定）
+      const apiResult = await checkViaApi();
+      if (apiResult) {
+        console.log('版本检测成功 (via API):', apiResult.status);
+        setCachedResult(apiResult);
+        return apiResult;
+      }
+
+      // 策略2: API 失败，回退到客户端直接获取
+      console.log('API 检测失败，尝试客户端直接获取...');
+      const clientResult = await checkViaClientDirect();
+      console.log('版本检测结果 (via Client):', clientResult.status);
+      setCachedResult(clientResult);
+      return clientResult;
+    } finally {
+      // 请求完成后清除 pending 状态
+      pendingRequest = null;
+    }
+  })();
+
+  return pendingRequest;
 }

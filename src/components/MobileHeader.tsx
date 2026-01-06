@@ -14,7 +14,7 @@ interface MobileHeaderProps {
 const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
   const { siteName } = useSite();
   return (
-    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/70 dark:border-gray-700/50'>
+    <header className='md:hidden fixed top-0 left-0 right-0 z-999 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/70 dark:border-gray-700/50'>
       <div className='h-12 flex items-center justify-between px-4'>
         {/* 左侧：搜索按钮、返回按钮和设置按钮 */}
         <div className='flex items-center gap-2'>
@@ -53,8 +53,8 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
           href='/'
           className='text-2xl font-bold tracking-tight hover:opacity-90 transition-all duration-300 hover:scale-105'
         >
-          <span className='bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse hover:animate-none relative'>
-            <span className='absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent blur-sm opacity-70'></span>
+          <span className='bg-linear-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse hover:animate-none relative'>
+            <span className='absolute inset-0 bg-linear-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent blur-sm opacity-70'></span>
             <span className='relative'>{siteName}</span>
           </span>
         </Link>

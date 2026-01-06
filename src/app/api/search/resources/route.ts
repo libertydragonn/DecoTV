@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { NextRequest, NextResponse } from 'next/server';
 
 import { resolveAdultFilter } from '@/lib/adult-filter';
@@ -22,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const shouldFilterAdult = resolveAdultFilter(
       searchParams,
-      globalConfig.SiteConfig.DisableYellowFilter
+      globalConfig.SiteConfig.DisableYellowFilter,
     );
 
     const apiSites = shouldFilterAdult
@@ -37,7 +35,7 @@ export async function GET(request: NextRequest) {
         'X-Adult-Filter': shouldFilterAdult ? 'enabled' : 'disabled', // 调试信息
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: '获取资源失败' }, { status: 500 });
   }
 }

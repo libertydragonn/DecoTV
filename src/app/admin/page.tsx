@@ -2897,6 +2897,21 @@ const VideoSourceConfig = ({
 
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}));
+
+        // 401 鉴权失败：保留表单，提示并引导重新登录
+        if (resp.status === 401) {
+          showError(
+            data.error ||
+              '登录已过期或未配置 AUTH_SECRET，请检查 Docker 环境变量后重新登录。',
+            showAlert,
+          );
+          // 轻量跳转到登录页，避免多次点击无响应
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 300);
+          throw new Error('Unauthorized');
+        }
+
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
@@ -6546,7 +6561,7 @@ function AdminPageClient() {
             </h1>
             <div className='p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800'>
               <div className='flex items-start gap-3'>
-                <AlertCircle className='w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5' />
+                <AlertCircle className='w-6 h-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5' />
                 <div className='flex-1'>
                   <h3 className='text-lg font-semibold text-red-800 dark:text-red-300 mb-2'>
                     加载失败
@@ -6586,7 +6601,7 @@ function AdminPageClient() {
           {storageMode === 'local' && (
             <div className='mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800'>
               <div className='flex items-start gap-3'>
-                <AlertTriangle className='w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5' />
+                <AlertTriangle className='w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5' />
                 <div className='flex-1'>
                   <h4 className='text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1'>
                     本地存储模式

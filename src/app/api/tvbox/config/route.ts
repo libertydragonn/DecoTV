@@ -4,7 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
 import { getEffectiveRequestOrigin } from '@/lib/request-protocol';
-import { getSpiderJar, getSpiderJarSecurityStatus } from '@/lib/spiderJar';
+import {
+  getFallbackSpiderJarInfo,
+  getSpiderJar,
+  getSpiderJarSecurityStatus,
+} from '@/lib/spiderJar';
 import {
   buildResolutionFilterFromSearchParams,
   formatResolutionLabel,
@@ -225,20 +229,7 @@ export async function GET(req: NextRequest) {
       ]);
     } catch (err) {
       console.warn('[TVBox] Spider JAR fetch timeout/failed:', err);
-      // 超时或失败时使用默认备选
-      jarInfo = {
-        success: false,
-        source: 'fallback',
-        md5: 'e53eb37c4dc3dce1c8ee0c996ca3a024',
-        sha256: '',
-        buffer: null,
-        cached: false,
-        size: 0,
-        tried: 0,
-        hashVerified: false,
-        remoteEnabled: false,
-        securityMode: 'fallback-only' as const,
-      };
+      jarInfo = getFallbackSpiderJarInfo();
     }
 
     const sameOriginSpiderJar = `${baseUrl}/api/proxy/spider.jar;md5;${jarInfo.md5}`;

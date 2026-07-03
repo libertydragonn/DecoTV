@@ -222,6 +222,10 @@ function buildFallbackInfo(
   };
 }
 
+export function getFallbackSpiderJarInfo(tried = 0): SpiderJarInfo {
+  return buildFallbackInfo(Date.now(), tried, getRemoteSpiderJarConfig());
+}
+
 export async function getSpiderJar(
   forceRefresh = false,
 ): Promise<SpiderJarInfo> {

@@ -1,6 +1,7 @@
 /* global afterEach, describe, expect, it, jest */
 
 const {
+  getFallbackSpiderJarInfo,
   getSpiderJar,
   getSpiderJarSecurityStatus,
   resetSpiderJarCacheForTests,
@@ -47,6 +48,20 @@ describe('spider jar security mode', () => {
     expect(jar.securityMode).toBe('fallback-only');
     expect(jar.tried).toBe(0);
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('exposes fallback jar metadata from the same bytes used by getSpiderJar', async () => {
+    clearSpiderEnv();
+    const fallback = getFallbackSpiderJarInfo();
+    const jar = await getSpiderJar(true);
+
+    expect(fallback.source).toBe('fallback');
+    expect(fallback.md5).toBe(jar.md5);
+    expect(fallback.sha256).toBe(jar.sha256);
+    expect(fallback.size).toBe(jar.size);
+    expect(fallback.md5).toMatch(/^[a-f0-9]{32}$/);
+    expect(fallback.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(fallback.size).toBeGreaterThan(0);
   });
 
   it('does not fetch remote URLs when remote mode lacks a pinned hash', async () => {

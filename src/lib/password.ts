@@ -10,6 +10,8 @@ const KEY_LENGTH = 64;
 const SCRYPT_N = 16384;
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
+const STORED_PASSWORD_HASH_PATTERN =
+  /^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]{16,}\$[A-Za-z0-9_-]{80,}$/;
 
 function scrypt(
   password: string,
@@ -29,15 +31,7 @@ function scrypt(
 }
 
 export function isStoredPasswordHash(value: string | null | undefined): boolean {
-  if (!value) return false;
-  const parts = value.split('$');
-  return (
-    parts.length === 6 &&
-    parts[0] === HASH_PREFIX &&
-    parts.slice(1, 4).every((part) => Number.isInteger(Number(part))) &&
-    parts[4].length > 0 &&
-    parts[5].length > 0
-  );
+  return Boolean(value && STORED_PASSWORD_HASH_PATTERN.test(value));
 }
 
 export async function hashPassword(password: string): Promise<string> {

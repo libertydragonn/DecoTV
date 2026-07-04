@@ -437,6 +437,8 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 
 > **注意**：Upstash 使用 REST API 连接，需要填写 `UPSTASH_URL`（HTTPS ENDPOINT）和 `UPSTASH_TOKEN`，不是传统的 Redis 连接字符串。
 
+> ⚠️ **公开部署安全提示**：`localstorage` 模式下，部分管理后台页面与 API 会跳过登录鉴权（这是为无数据库首次配置保留的兼容行为）。**公网可访问的部署请勿直接使用 `localstorage` 模式**：应改用 `redis` / `kvrocks` / `upstash` 存储模式，或在站点前面加一层访问控制（Cloudflare Access、Nginx Basic Auth、Tailscale 等）。
+
 ### 用户注册配置
 
 注册需要先配置 `redis`、`upstash` 或 `kvrocks` 存储。部署后由站长在 `/admin` -> `用户配置` -> `公开注册` 中直接控制开关和新用户默认用户组，无需为日常启停重新部署。
@@ -447,6 +449,26 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 | DEFAULT_REGISTRATION_GROUP      | 旧配置迁移时的初始默认用户组 | 用户组名称 | 空     | 后续在管理面板选择已创建的用户组 |
 
 > **安全提示**：公开注册默认关闭；不设置默认用户组时，新账号默认可使用全部可用视频源。详见 [用户注册功能说明](./docs/用户注册功能说明.md)
+
+### 安全与代理配置
+
+| 变量                             | 说明                          | 可选值                            | 默认值 | 备注                                       |
+| -------------------------------- | ----------------------------- | --------------------------------- | ------ | ------------------------------------------ |
+| ALLOW_REMOTE_SPIDER_JAR          | 是否允许下载远程 spider.jar   | true/false                        | false  | 默认仅使用内置 fallback JAR                |
+| SPIDER_JAR_URL / SPIDER_JAR_URLS | 远程 spider.jar 候选地址      | URL（多个用逗号或空格分隔）       | 空     | 需同时开启上项并配置 SHA-256               |
+| SPIDER_JAR_SHA256                | 远程 JAR 的 SHA-256 校验值    | 64 位十六进制                     | 空     | 哈希不匹配即拒绝远程 JAR 并回退 fallback   |
+| PROXY_ALLOW_PRIVATE_HOSTS        | 是否允许代理访问私网/内网地址 | true/false                        | false  | 仅自托管 NAS / Jellyfin 等内网媒体场景开启 |
+| PROXY_PRIVATE_HOST_ALLOWLIST     | 私网地址白名单                | IP、主机名、IPv4 CIDR（逗号分隔） | 空     | 尽量只放行单个必要 IP，避免放行大段 CIDR   |
+
+远程 spider.jar 默认禁用（供应链安全），依赖 CSP spider 的 TVBox / 影视仓用户请按 [TVBox 配置优化说明](./TVBox配置优化说明.md) 中的迁移指南显式配置以上三个 spider 变量：
+
+```env
+ALLOW_REMOTE_SPIDER_JAR=true
+SPIDER_JAR_URL=https://你信任的地址/spider.jar
+SPIDER_JAR_SHA256=<该 JAR 的 64 位 SHA-256>
+```
+
+> **关于 SSRF 防护**：代理类接口会阻挡 localhost、私网 IP、云 metadata 地址，并对重定向逐跳重新校验，可显著降低 SSRF 风险；但 DNS 解析结果未绑定到实际连接，DNS rebinding 类风险仅为尽力缓解、并未完全消除。请勿将这些接口视为内网的硬性安全边界。
 
 ### 高级配置
 

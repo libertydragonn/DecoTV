@@ -10,8 +10,14 @@ import {
   getAuthMetaCookieOptions,
 } from '@/lib/auth-cookie';
 import { isPublicMode } from '@/lib/auth-mode';
+import { getAuthSigningSecret, signAuthToken } from '@/lib/auth-signature';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
+import {
+  checkLoginRateLimit,
+  recordLoginFailure,
+  recordLoginSuccess,
+} from '@/lib/login-rate-limit';
 import { getEffectiveRequestOrigin } from '@/lib/request-protocol';
 
 export const runtime = 'nodejs';
@@ -38,26 +44,18 @@ function withCors(response: NextResponse, req: NextRequest): NextResponse {
   return response;
 }
 
-async function generateSignature(
-  data: string,
-  secret: string,
-): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
+function rateLimitedResponse(retryAfterSeconds: number): NextResponse {
+  return NextResponse.json(
+    { error: '登录尝试次数过多，请稍后再试' },
+    {
+      status: 429,
+      headers: { 'Retry-After': String(retryAfterSeconds) },
+    },
   );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
-
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 async function generateAuthCookie(
+  expires: Date,
   username?: string,
   role?: 'owner' | 'admin' | 'user',
 ): Promise<string> {
@@ -65,16 +63,21 @@ async function generateAuthCookie(
     role: 'owner' | 'admin' | 'user';
     username?: string;
     signature?: string;
+    iat?: number;
+    exp?: number;
     timestamp?: number;
   } = { role: role || 'user' };
 
-  if (username && process.env.PASSWORD) {
+  if (username && getAuthSigningSecret()) {
+    const iat = Date.now();
+    const exp = expires.getTime();
     authData.username = username;
-    authData.signature = await generateSignature(
-      `${username}:${authData.role}`,
-      process.env.PASSWORD,
-    );
-    authData.timestamp = Date.now();
+    // The signature binds iat/exp so a leaked cookie cannot be replayed
+    // after it expires and the browser expiry cannot be extended.
+    authData.signature = await signAuthToken(username, authData.role, iat, exp);
+    authData.iat = iat;
+    authData.exp = exp;
+    authData.timestamp = iat;
   }
 
   return encodeURIComponent(JSON.stringify(authData));
@@ -98,9 +101,8 @@ function setAuthCookies(
   req: NextRequest,
   cookieValue: string,
   metaCookieValue: string,
+  expires: Date,
 ) {
-  const expires = getAuthCookieExpires();
-
   response.cookies.set(
     AUTH_COOKIE_NAME,
     cookieValue,
@@ -142,19 +144,28 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
       }
 
+      const localRate = checkLoginRateLimit(req, '__local__');
+      if (localRate.limited) {
+        return withCors(rateLimitedResponse(localRate.retryAfterSeconds), req);
+      }
+
       if (password !== envPassword) {
+        recordLoginFailure(req, '__local__');
         return NextResponse.json(
           { ok: false, error: '密码错误' },
           { status: 401 },
         );
       }
 
+      recordLoginSuccess(req, '__local__');
+      const expires = getAuthCookieExpires();
       const response = NextResponse.json({ ok: true });
       setAuthCookies(
         response,
         req,
-        await generateAuthCookie('__local__', 'owner'),
+        await generateAuthCookie(expires, '__local__', 'owner'),
         generateAuthMetaCookie('__local__', 'owner'),
+        expires,
       );
 
       return withCors(response, req);
@@ -169,46 +180,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
     }
 
+    const rate = checkLoginRateLimit(req, username);
+    if (rate.limited) {
+      return withCors(rateLimitedResponse(rate.retryAfterSeconds), req);
+    }
+
     if (
       username === process.env.USERNAME &&
       password === process.env.PASSWORD
     ) {
+      recordLoginSuccess(req, username);
+      const expires = getAuthCookieExpires();
       const response = NextResponse.json({ ok: true });
       setAuthCookies(
         response,
         req,
-        await generateAuthCookie(username, 'owner'),
+        await generateAuthCookie(expires, username, 'owner'),
         generateAuthMetaCookie(username, 'owner'),
+        expires,
       );
 
       return withCors(response, req);
     }
 
     if (username === process.env.USERNAME) {
+      recordLoginFailure(req, username);
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
     const config = await getConfig();
     const user = config.UserConfig.Users.find((u) => u.username === username);
     if (user && user.banned) {
+      recordLoginFailure(req, username);
       return NextResponse.json({ error: '用户被封禁' }, { status: 401 });
     }
 
     try {
       const pass = await db.verifyUser(username, password);
       if (!pass) {
+        recordLoginFailure(req, username);
         return NextResponse.json(
           { error: '用户名或密码错误' },
           { status: 401 },
         );
       }
 
+      recordLoginSuccess(req, username);
+      const expires = getAuthCookieExpires();
       const response = NextResponse.json({ ok: true });
       setAuthCookies(
         response,
         req,
-        await generateAuthCookie(username, user?.role || 'user'),
+        await generateAuthCookie(expires, username, user?.role || 'user'),
         generateAuthMetaCookie(username, user?.role || 'user'),
+        expires,
       );
 
       return withCors(response, req);

@@ -452,13 +452,14 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 
 ### 安全与代理配置
 
-| 变量                             | 说明                          | 可选值                            | 默认值 | 备注                                       |
-| -------------------------------- | ----------------------------- | --------------------------------- | ------ | ------------------------------------------ |
-| ALLOW_REMOTE_SPIDER_JAR          | 是否允许下载远程 spider.jar   | true/false                        | false  | 默认仅使用内置 fallback JAR                |
-| SPIDER_JAR_URL / SPIDER_JAR_URLS | 远程 spider.jar 候选地址      | URL（多个用逗号或空格分隔）       | 空     | 需同时开启上项并配置 SHA-256               |
-| SPIDER_JAR_SHA256                | 远程 JAR 的 SHA-256 校验值    | 64 位十六进制                     | 空     | 哈希不匹配即拒绝远程 JAR 并回退 fallback   |
-| PROXY_ALLOW_PRIVATE_HOSTS        | 是否允许代理访问私网/内网地址 | true/false                        | false  | 仅自托管 NAS / Jellyfin 等内网媒体场景开启 |
-| PROXY_PRIVATE_HOST_ALLOWLIST     | 私网地址白名单                | IP、主机名、IPv4 CIDR（逗号分隔） | 空     | 尽量只放行单个必要 IP，避免放行大段 CIDR   |
+| 变量                             | 说明                          | 可选值                                | 默认值 | 备注                                                             |
+| -------------------------------- | ----------------------------- | ------------------------------------- | ------ | ---------------------------------------------------------------- |
+| AUTH_SECRET                      | 登录 cookie 签名密钥          | 随机字符串（openssl rand -base64 32） | 空     | 未设置时回退使用 PASSWORD 签名；更换生效中的密钥会使所有登录失效 |
+| ALLOW_REMOTE_SPIDER_JAR          | 是否允许下载远程 spider.jar   | true/false                            | false  | 默认仅使用内置 fallback JAR                                      |
+| SPIDER_JAR_URL / SPIDER_JAR_URLS | 远程 spider.jar 候选地址      | URL（多个用逗号或空格分隔）           | 空     | 需同时开启上项并配置 SHA-256                                     |
+| SPIDER_JAR_SHA256                | 远程 JAR 的 SHA-256 校验值    | 64 位十六进制                         | 空     | 哈希不匹配即拒绝远程 JAR 并回退 fallback                         |
+| PROXY_ALLOW_PRIVATE_HOSTS        | 是否允许代理访问私网/内网地址 | true/false                            | false  | 仅自托管 NAS / Jellyfin 等内网媒体场景开启                       |
+| PROXY_PRIVATE_HOST_ALLOWLIST     | 私网地址白名单                | IP、主机名、IPv4 CIDR（逗号分隔）     | 空     | 尽量只放行单个必要 IP，避免放行大段 CIDR                         |
 
 远程 spider.jar 默认禁用（供应链安全），依赖 CSP spider 的 TVBox / 影视仓用户请按 [TVBox 配置优化说明](./TVBox配置优化说明.md) 中的迁移指南显式配置以上三个 spider 变量：
 
@@ -469,6 +470,8 @@ SPIDER_JAR_SHA256=<该 JAR 的 64 位 SHA-256>
 ```
 
 > **关于 SSRF 防护**：代理类接口会阻挡 localhost、私网 IP、云 metadata 地址，并对重定向逐跳重新校验，可显著降低 SSRF 风险；但 DNS 解析结果未绑定到实际连接，DNS rebinding 类风险仅为尽力缓解、并未完全消除。请勿将这些接口视为内网的硬性安全边界。
+
+> **关于登录保护**：登录 cookie 的签名内容包含用户名、角色、签发时间和过期时间，过期后自动失效；升级后旧格式 cookie 会失效，用户需重新登录一次。登录接口内置按「IP+账号」（15 分钟 5 次失败）和「账号」（15 分钟 20 次失败）的限速；该限速为单实例内存实现，多实例部署建议在反向代理 / WAF 层再加一层全局限速。
 
 ### 高级配置
 

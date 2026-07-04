@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { isPublicAdminAllowed, isPublicMode } from './auth-mode';
+import { verifyAuthToken } from './auth-signature';
 
 // 单例缓存，避免重复打印警告
 let cachedSecret: string | null | undefined;
@@ -35,6 +36,8 @@ export function getAuthInfoFromCookie(request: NextRequest): {
   username?: string;
   role?: 'owner' | 'admin' | 'user' | 'guest';
   signature?: string;
+  iat?: number;
+  exp?: number;
   timestamp?: number;
 } | null {
   const authCookie = request.cookies.get('auth');
@@ -146,11 +149,7 @@ export async function verifyApiAuth(request: NextRequest): Promise<{
       if (
         authInfo?.username &&
         authInfo.signature &&
-        (await verifyAuthSignature(
-          buildSignedAuthPayload(authInfo.username, authInfo.role || 'user'),
-          authInfo.signature,
-          process.env.PASSWORD || '',
-        ))
+        (await verifyAuthToken(authInfo))
       ) {
         verifiedUsername = authInfo.username;
         verifiedRole =
@@ -180,14 +179,9 @@ export async function verifyApiAuth(request: NextRequest): Promise<{
     if (!envPassword) {
       return { isValid: true, role: 'owner', isOwner: true, isLocalMode };
     }
-    // 验证密码
+    // 验证签名（含过期时间）
     if (authInfo.username && authInfo.signature) {
-      const role = authInfo.role || 'owner';
-      const isValid = await verifyAuthSignature(
-        buildSignedAuthPayload(authInfo.username, role),
-        authInfo.signature,
-        envPassword,
-      );
+      const isValid = await verifyAuthToken(authInfo);
       return {
         isValid,
         username: isValid ? authInfo.username : undefined,
@@ -205,11 +199,7 @@ export async function verifyApiAuth(request: NextRequest): Promise<{
   }
 
   // 判断是否为站长
-  const validSignature = await verifyAuthSignature(
-    buildSignedAuthPayload(authInfo.username, authInfo.role || 'user'),
-    authInfo.signature,
-    process.env.PASSWORD || '',
-  );
+  const validSignature = await verifyAuthToken(authInfo);
   if (!validSignature) {
     return { isValid: false, isOwner: false, isLocalMode };
   }
@@ -225,44 +215,4 @@ export async function verifyApiAuth(request: NextRequest): Promise<{
     isOwner,
     isLocalMode,
   };
-}
-
-function buildSignedAuthPayload(
-  username: string,
-  role: 'owner' | 'admin' | 'user' | 'guest',
-): string {
-  return `${username}:${role}`;
-}
-
-async function verifyAuthSignature(
-  payload: string,
-  signature: string,
-  secret: string,
-): Promise<boolean> {
-  if (!secret || !/^[0-9a-f]+$/i.test(signature) || signature.length !== 64) {
-    return false;
-  }
-
-  try {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    );
-    const signatureBuffer = new Uint8Array(
-      signature.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [],
-    );
-
-    return crypto.subtle.verify(
-      'HMAC',
-      key,
-      signatureBuffer,
-      encoder.encode(payload),
-    );
-  } catch {
-    return false;
-  }
 }

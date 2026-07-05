@@ -841,6 +841,18 @@ export async function GET(req: NextRequest) {
     (tvboxConfig as any).spider_candidates = spiderSecurity.candidates;
     (tvboxConfig as any).spider_security = spiderSecurity;
 
+    // fallback-only 模式下内置 JAR 不含完整 CSP spider，配置里又存在 csp_ 源时
+    // 明确提示用户，避免只看到「没找到数据 / jar 加载失败」而无从排查
+    if (
+      jarInfo.securityMode === 'fallback-only' &&
+      tvboxConfig.sites.some((site: { type?: number }) => site.type === 3)
+    ) {
+      (tvboxConfig as any).spider_warning =
+        '当前为 fallback-only 模式：内置 JAR 仅保证端点可达，不包含完整 CSP spider，' +
+        '配置中的 csp_ 源将无法返回数据。如需恢复，请设置 ALLOW_REMOTE_SPIDER_JAR=true、' +
+        'SPIDER_JAR_URL(S) 和 SPIDER_JAR_SHA256（详见 TVBox配置优化说明.md 的迁移指南）。';
+    }
+
     // 配置验证和清理
     console.log('TVBox配置验证:', {
       sitesCount: tvboxConfig.sites.length,

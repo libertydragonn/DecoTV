@@ -39,14 +39,20 @@ export async function GET() {
     if (!freshJar.success) {
       if (freshJar.securityMode === 'fallback-only') {
         response.recommendations.push(
-          '远程 JAR 默认禁用，正在使用内置备用 JAR',
+          '远程 JAR 默认禁用，正在使用内置备用 JAR（仅保证端点可达，不包含完整 CatVod/FongMi spider）',
         );
         response.recommendations.push(
-          '如需远程 JAR，请配置 ALLOW_REMOTE_SPIDER_JAR、SPIDER_JAR_URLS 和 SPIDER_JAR_SHA256',
+          '如果 TVBox/影视仓配置了 csp_ 开头的 CSP 源，这些源将无法返回数据（表现为「没找到数据」或「jar 加载失败」）',
+        );
+        response.recommendations.push(
+          '恢复方法：配置 ALLOW_REMOTE_SPIDER_JAR=true、SPIDER_JAR_URL(S) 和 SPIDER_JAR_SHA256，三项缺一不可，详见 TVBox配置优化说明.md 的迁移指南',
         );
       } else {
         response.recommendations.push(
           '已启用远程 JAR，但所有候选源均不可用或 SHA-256 不匹配，正在使用内置备用 JAR',
+        );
+        response.recommendations.push(
+          '请检查候选地址是否可访问、SPIDER_JAR_SHA256 是否与当前 JAR 内容一致（JAR 更新后哈希会变化）',
         );
       }
     } else if (freshJar.tried > 3) {
@@ -61,7 +67,8 @@ export async function GET() {
       );
     }
 
-    if (freshJar.size < 50000) {
+    // fallback JAR 本身就很小，「强制刷新」对 fallback-only 模式没有意义
+    if (freshJar.size < 50000 && freshJar.securityMode !== 'fallback-only') {
       response.recommendations.push('JAR 文件较小，可能不完整，建议强制刷新');
     }
 

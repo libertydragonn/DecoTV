@@ -1,20 +1,22 @@
 /*
- * In-memory login rate limiter (per instance).
+ * In-memory login rate limiter (per instance) — OPT-IN, disabled by default.
  *
- * Design goal: throttle brute force WITHOUT ever locking out the legitimate
- * operator. Limits are keyed on the real client IP + account. When no client
- * IP can be determined (direct LAN/Docker exposure with no proxy passing
- * X-Forwarded-For / X-Real-IP) the limiter is disabled for that request:
- * collapsing every client to a single "unknown" bucket would let a handful of
- * failed attempts (or the other failures a broken session produces) lock the
- * only account out with 429s, which is exactly the kind of self-inflicted
- * login outage we must avoid. Rate limiting therefore only engages behind a
- * reverse proxy that forwards the client IP — the public-facing case where it
- * actually matters.
+ * Why opt-in: the limiter can only be as trustworthy as the client IP it
+ * keys on, and in the common deployments (direct Docker/LAN, or a reverse
+ * proxy that forwards its own address) every request is observed with the
+ * same gateway/proxy IP. Enabling limiting unconditionally then collapses all
+ * clients into one bucket, so a few failed attempts — including the failures a
+ * stale post-upgrade session produces — lock the whole instance out with 429s.
+ * That self-inflicted login outage is worse than the brute-force it prevents
+ * for a self-hosted app, so the default is OFF: login can never be throttled
+ * out of the box.
  *
- * State lives in module memory: multi-instance deployments bound attempts per
- * instance rather than globally, which still caps the practical guess rate;
- * put a shared limiter (WAF, reverse proxy) in front for stronger guarantees.
+ * Operators who terminate TLS at a proxy that forwards the real client IP via
+ * X-Forwarded-For / X-Real-IP can set LOGIN_RATE_LIMIT=true to enable it.
+ * Limits are then keyed on that client IP so a limited client can never lock
+ * out a different client (or the operator) on the same account. State lives in
+ * module memory: multi-instance deployments bound attempts per instance; put a
+ * shared limiter (WAF, reverse proxy) in front for stronger guarantees.
  */
 import type { NextRequest } from 'next/server';
 
@@ -25,6 +27,12 @@ const MAX_FAILURES_PER_IP = 15;
 const MAX_TRACKED_KEYS = 10_000;
 
 const failures = new Map<string, number[]>();
+
+function isEnabled(): boolean {
+  return ['1', 'true', 'yes', 'on'].includes(
+    (process.env.LOGIN_RATE_LIMIT || '').toLowerCase(),
+  );
+}
 
 // Returns the forwarded client IP, or null when none is available. Null means
 // "cannot safely attribute this request to a client" and disables limiting.
@@ -45,9 +53,11 @@ function normalizeAccount(username: string): string {
 }
 
 // Buckets are keyed on the client IP so a limited client can never lock out a
-// different client (or the operator) on the same account. Returns [] when no
-// client IP is available, which disables limiting for the request.
+// different client (or the operator) on the same account. Returns [] when the
+// limiter is disabled or no client IP is available, which skips limiting.
 function keysFor(request: Pick<NextRequest, 'headers'>, username: string) {
+  if (!isEnabled()) return [];
+
   const ip = getClientIp(request);
   if (!ip) return [];
 

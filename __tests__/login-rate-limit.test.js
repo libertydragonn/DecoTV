@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-/* global beforeEach, describe, expect, it */
+/* global afterEach, beforeEach, describe, expect, it */
 
 const {
   checkLoginRateLimit,
@@ -15,10 +15,40 @@ function requestFromIp(ip) {
 }
 
 const WINDOW_MS = 15 * 60 * 1000;
+const originalFlag = process.env.LOGIN_RATE_LIMIT;
 
-describe('login rate limiting', () => {
+describe('login rate limiting (disabled by default)', () => {
   beforeEach(() => {
     resetLoginRateLimitForTests();
+    delete process.env.LOGIN_RATE_LIMIT;
+  });
+
+  afterEach(() => {
+    if (originalFlag === undefined) delete process.env.LOGIN_RATE_LIMIT;
+    else process.env.LOGIN_RATE_LIMIT = originalFlag;
+  });
+
+  it('does not limit anything when LOGIN_RATE_LIMIT is unset', () => {
+    const request = requestFromIp('203.0.113.9');
+    const now = Date.now();
+
+    for (let i = 0; i < 50; i++) {
+      recordLoginFailure(request, 'admin', now);
+    }
+
+    expect(checkLoginRateLimit(request, 'admin', now).limited).toBe(false);
+  });
+});
+
+describe('login rate limiting (LOGIN_RATE_LIMIT=true)', () => {
+  beforeEach(() => {
+    resetLoginRateLimitForTests();
+    process.env.LOGIN_RATE_LIMIT = 'true';
+  });
+
+  afterEach(() => {
+    if (originalFlag === undefined) delete process.env.LOGIN_RATE_LIMIT;
+    else process.env.LOGIN_RATE_LIMIT = originalFlag;
   });
 
   it('limits an IP+account pair after 5 failures within the window', () => {

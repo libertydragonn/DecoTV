@@ -47,6 +47,7 @@ const originalEnv = {
   PUBLIC_ALLOW_ADMIN: process.env.PUBLIC_ALLOW_ADMIN,
   USERNAME: process.env.USERNAME,
   PASSWORD: process.env.PASSWORD,
+  LOGIN_RATE_LIMIT: process.env.LOGIN_RATE_LIMIT,
 };
 
 let mockDb;
@@ -289,7 +290,8 @@ describe('auth login and logout routes', () => {
     );
   });
 
-  it('rate limits repeated failed logins and unblocks after success elsewhere', async () => {
+  it('rate limits repeated failed logins when LOGIN_RATE_LIMIT is enabled', async () => {
+    process.env.LOGIN_RATE_LIMIT = 'true';
     const route = loadLoginRoute('kvrocks');
     const attempt = (password) =>
       route.POST(
